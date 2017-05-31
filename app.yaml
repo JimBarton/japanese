@@ -1,0 +1,23 @@
+runtime: python27
+api_version: 1
+threadsafe: yes
+
+handlers:
+- url: /.*
+  script: main.app
+
+libraries:
+- name: MySQLdb
+  version: latest
+- name: webapp2
+  version: latest
+- name: jinja2
+  version: latest
+
+# [START env_variables]
+env_variables:
+    CLOUDSQL_CONNECTION_NAME: japanese2-166714:europe-west1:japanese
+    CLOUDSQL_USER: root
+    CLOUDSQL_PASSWORD: japanesejim
+    CLOUDSQL_DATABASE: japanese
+# [END env_variables]
