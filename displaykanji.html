@@ -33,10 +33,11 @@
     <div class="col-sm-8 text-left"> 
       <h1>Kanji Lookup</h1>
       <hr>
-      <form action="/displaykanji" method="post">
-        <div><textarea name="content" rows="1" cols="60" placeholder="Enter single kanji to retrieve"></textarea></div>
-        <div><input type="submit" value="Retrieve"></div>
-      </form>
+      <h3>Character: {{ id }}</h3>
+      <p>Grade: {{ grade }}</p>
+      <p>Strokecount: {{ strokecount }}</p>
+      <p>Frequency: {{ frequency }}</p>
+      <p>JLPT Level: {{ jlpt }}</p>
     </div>
 <!--    <div class="col-sm-2 sidenav">
       <div class="well">

@@ -4,6 +4,7 @@
 import os
 import re
 import sys
+import cgi
 
 from google.appengine.api import app_identity
 import cloudstorage as gcs
@@ -19,27 +20,24 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 
 class MainPage(webapp2.RequestHandler):
   def get(self):
-    # open a connection to the database
-    db = jdatabase.Jdatabase()
 
     # create the database tables and populate
     #self.do_setup(db)
 
-    kanji_id = '本'
-    kanji = db.retrieve_kanji(kanji_id)
-    #print template_values
     template = JINJA_ENVIRONMENT.get_template('index.html')
-    self.response.write(template.render(kanji.dict))
+    self.response.write(template.render())
 
-    db.close_connection()
- 
-  def do_setup(self, db):
+
+def do_setup(self, db):
     kanji = jdatabase.Jkanji()
     kanji_id = ''
     grade = ''
     strokecount = ''
     frequency = ''
     jlpt = ''
+
+    # open a connection to the database
+    db = jdatabase.Jdatabase()
 
     # create the database tables from scratch
     db.create_tables()
@@ -95,6 +93,22 @@ class MainPage(webapp2.RequestHandler):
           frequency = ''
           jlpt = ''
 
+    db.close_connection()
+
+class DisplayKanji(webapp2.RequestHandler):
+  def post(self):
+    # open a connection to the database
+    db = jdatabase.Jdatabase()
+
+    kanji_id = cgi.escape(self.request.get('content'))
+    kanji_template = db.retrieve_kanji(kanji_id)
+    print kanji_template
+    template = JINJA_ENVIRONMENT.get_template('displaykanji.html')
+    self.response.write(template.render(kanji_template.dict))
+
+    db.close_connection()
+        
 app = webapp2.WSGIApplication([
     ('/', MainPage),
+    ('/displaykanji', DisplayKanji)
 ], debug=True)
