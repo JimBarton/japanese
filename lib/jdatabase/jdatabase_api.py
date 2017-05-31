@@ -2,7 +2,11 @@
 
 import sys
 import os
+import re
 import MySQLdb
+
+from google.appengine.api import app_identity
+import cloudstorage as gcs
 
 class Jdatabase:
   _connection_name = os.environ.get('CLOUDSQL_CONNECTION_NAME')
@@ -26,7 +30,9 @@ class Jdatabase:
       self.conn.commit()
       self.conn.close()
 
-  def create_tables(self):
+  def recreate_tables(self):
+    kanji = Jkanji()
+    
     sql_command = 'DROP TABLE kanji'
     try:
       self.cursor.execute(sql_command)
@@ -40,6 +46,57 @@ class Jdatabase:
     except MySQLdb.Error as e:
       print e
       sys.exit(1)
+
+    # read the kanjidic file from the cloud storage if running in deployment
+    # otherwise read from local file (can't get the stubs to work at the moment)
+    if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/'):
+      bucket_name = os.environ.get('BUCKET_NAME', app_identity.get_default_gcs_bucket_name())
+      bucket = '/' + bucket_name
+    else:
+      bucket = '.'
+
+    filename = bucket + '/kanjidic2.xml'
+    
+    # If running in deployment then open file using google cloud library
+    # otherwise use local file in this directory. cloud library should work but doesn't at the moment
+    #if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/'):
+      #with gcs.open(filename) as kanji_file:
+    #else:
+    with open(filename) as kanji_file:
+      # read each line in the kanji file and extract each kanji and its data based on tags
+      for line in kanji_file:
+        search = re.search(r'<literal>(.+)</literal>',line)
+        if search:
+          kanji.dict['id'] = search.group(1)
+          continue
+        search = re.search(r'<grade>(\d+)</grade>', line)
+        if search:
+          kanji.dict['grade'] = search.group(1)
+          continue
+        search = re.search(r'<stroke_count>(\d+)</stroke_count>', line)
+        if search and not kanji.dict['strokecount']:
+          kanji.dict['strokecount'] = search.group(1)
+          continue
+        search = re.search(r'<freq>(\d+)</freq>', line)
+        if search:
+          kanji.dict['frequency'] = search.group(1)
+          continue
+        search = re.search(r'<jlpt>(\d+)</jlpt>', line)
+        if search:
+          kanji.dict['jlpt'] = search.group(1)
+          continue
+        search = re.search(r'</character>', line)
+        if search:
+          # we have reached the end of one kanji tag
+          # if this is a jouyou kanji, write out the current kanji to the database
+          if (kanji.dict['grade'] >= '1' and kanji.dict['grade'] <= '8'):
+            self.insert_kanji(kanji)
+          # reset the string variables for the next kanji
+          kanji.dict['id'] = ''
+          kanji.dict['grade'] = ''
+          kanji.dict['strokecount'] = ''
+          kanji.dict['frequency'] = ''
+          kanji.dict['jlpt'] = ''
 
   def retrieve_kanji(self, character):
     kanji = Jkanji()

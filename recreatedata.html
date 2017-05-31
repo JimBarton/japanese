@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <link rel="import" href="/html/head.html">
-<!-- <object data="/html/top.html"></object> -->
 </head>
 <body>
 <nav class="navbar navbar-inverse">
@@ -18,6 +17,7 @@
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
         <li class="active"><a href="/">Kanji Lookup</a></li>
+        <li class="active"><a href="/recreatedata">Recreate Data</a></li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
 <!--        <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li> -->
@@ -31,13 +31,17 @@
       <p><a href="#">Left Link</a></p>
     </div> -->
     <div class="col-sm-8 text-left"> 
-      <h1>Kanji Lookup</h1>
+      <h1>Recreate Data</h1>
       <hr>
-      <h3>Character: {{ id }}</h3>
-      <p>Grade: {{ grade }}</p>
-      <p>Strokecount: {{ strokecount }}</p>
-      <p>Frequency: {{ frequency }}</p>
-      <p>JLPT Level: {{ jlpt }}</p>
+      {% if flag == true %}
+        <p>All database tables and data succesfully recreated</p>
+      {% else %}
+        <form action="/recreatedata" method="post">
+          <p>Click the following button to recreate all data in the database</p>
+          <p>!!!Any changes since the last reload will be lost!!!</p>
+          <div><input type="submit" value="Recreate Data"></div>
+        </form>
+      {% endif %}
     </div>
 <!--    <div class="col-sm-2 sidenav">
       <div class="well">
