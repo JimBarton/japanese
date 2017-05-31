@@ -22,19 +22,14 @@ class MainPage(webapp2.RequestHandler):
   def get(self):
 
     # create the database tables and populate
-    #self.do_setup(db)
+    #self.do_setup()
 
     template = JINJA_ENVIRONMENT.get_template('index.html')
     self.response.write(template.render())
 
 
-def do_setup(self, db):
+  def do_setup(self):
     kanji = jdatabase.Jkanji()
-    kanji_id = ''
-    grade = ''
-    strokecount = ''
-    frequency = ''
-    jlpt = ''
 
     # open a connection to the database
     db = jdatabase.Jdatabase()
@@ -62,36 +57,36 @@ def do_setup(self, db):
       for line in kanji_file:
         search = re.search(r'<literal>(.+)</literal>',line)
         if search:
-          kanji_id = search.group(1)
+          kanji.dict['id'] = search.group(1)
           continue
         search = re.search(r'<grade>(\d+)</grade>', line)
         if search:
-          grade = search.group(1)
+          kanji.dict['grade'] = search.group(1)
           continue
         search = re.search(r'<stroke_count>(\d+)</stroke_count>', line)
-        if search and not strokecount:
-          strokecount = search.group(1)
+        if search and not kanji.dict['strokecount']:
+          kanji.dict['strokecount'] = search.group(1)
           continue
         search = re.search(r'<freq>(\d+)</freq>', line)
         if search:
-          frequency = search.group(1)
+          kanji.dict['frequency'] = search.group(1)
           continue
         search = re.search(r'<jlpt>(\d+)</jlpt>', line)
         if search:
-          jlpt = search.group(1)
+          kanji.dict['jlpt'] = search.group(1)
           continue
         search = re.search(r'</character>', line)
         if search:
           # we have reached the end of one kanji tag
           # if this is a jouyou kanji, write out the current kanji to the database
-          if (grade >= '1' and grade <= '8'):
-            db.insert_kanji(kanji_id, grade, strokecount, frequency, jlpt)
+          if (kanji.dict['grade'] >= '1' and kanji.dict['grade'] <= '8'):
+            db.insert_kanji(kanji)
           # reset the string variables for the next kanji
-          kanji_id = ''
-          grade = ''
-          strokecount = ''
-          frequency = ''
-          jlpt = ''
+          kanji.dict['id'] = ''
+          kanji.dict['grade'] = ''
+          kanji.dict['strokecount'] = ''
+          kanji.dict['frequency'] = ''
+          kanji.dict['jlpt'] = ''
 
     db.close_connection()
 

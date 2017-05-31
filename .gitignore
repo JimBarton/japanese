@@ -1,4 +1,3 @@
 *.pyc
 backup*
-kanjidic2.xml
-
+*.xml

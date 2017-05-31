@@ -57,9 +57,9 @@ class Jdatabase:
     return kanji
 
   def insert_kanji(self, kanji):
-    sql_command = 'INSERT INTO kanji(id, grade, strokecount, frequency, jlpt, known)VALUES(%s,%s,%s,%s,%s,%d)'
+    sql_command = 'INSERT INTO kanji(id, grade, strokecount, frequency, jlpt, known)VALUES(%s,%s,%s,%s,%s,FALSE)'
     try:
-      self.cursor.execute(sql_command, (kanji.dict['id'], kanji.dict['grade'], kanji.dict['strokecount'], kanji.dict['frequency'], kanji.dict['jlpt'], kanji.dict['known']))
+      self.cursor.execute(sql_command, (kanji.dict['id'], kanji.dict['grade'], kanji.dict['strokecount'], kanji.dict['frequency'], kanji.dict['jlpt']))
     except MySQLdb.Error as e:
       print e
 
