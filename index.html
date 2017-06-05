@@ -17,7 +17,7 @@
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
         <li class="active"><a href="/">Kanji Lookup</a></li>
-        <li class="active"><a href="/recreatedata">Recreate Data</a></li>
+        <li class="inactive"><a href="/recreatedata">Recreate Data</a></li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
 <!--        <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li> -->
@@ -38,12 +38,16 @@
         <div><input type="text" name="content" maxlength="1" placeholder="Enter single kanji to retrieve"></div>
         <div><input type="submit" value="Retrieve"></div>
       </form>
-      {% if id %}
-        <h3>Character: {{ id }}</h3>
+      {% if kanji_id %}
+        <h3>Character: {{ kanji_id }}</h3>
         <p>Grade: {{ grade }}</p>
         <p>Strokecount: {{ strokecount }}</p>
         <p>Frequency: {{ frequency }}</p>
         <p>JLPT Level: {{ jlpt }}</p>
+        <p>Vocabulary: 
+        {% for vocab in vocab_list %}
+          {{ vocab[0] }},
+        {% endfor %}</p>
       {% endif %}
 
     </div>

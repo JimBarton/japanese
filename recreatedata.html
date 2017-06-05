@@ -16,7 +16,7 @@
     </div>
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
-        <li class="active"><a href="/">Kanji Lookup</a></li>
+        <li class="inactive"><a href="/">Kanji Lookup</a></li>
         <li class="active"><a href="/recreatedata">Recreate Data</a></li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -35,6 +35,9 @@
       <hr>
       {% if flag == true %}
         <p>All database tables and data succesfully recreated</p>
+        <p>Number of kanji: {{ kanji }}</p>
+        <p>Number of vocabulary: {{ vocabulary }}</p>
+        <p>Number of grammar terms: {{ grammar }}</p>
       {% else %}
         <form action="/recreatedata" method="post">
           <p>Click the following button to recreate all data in the database</p>

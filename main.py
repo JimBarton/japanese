@@ -26,7 +26,9 @@ class MainPage(webapp2.RequestHandler):
 
     kanji_id = cgi.escape(self.request.get('content'))
     kanji_template = db.retrieve_kanji(kanji_id)
-    print kanji_template
+    #for vocab in vocab_list:
+      #kanji_template.dict.update(vocab)
+    print kanji_template.dict
     template = JINJA_ENVIRONMENT.get_template('index.html')
     self.response.write(template.render(kanji_template.dict))
 
@@ -40,10 +42,11 @@ class RecreateData(webapp2.RequestHandler):
   def post(self):
     # open a connection to the database
     db = jdatabase.Jdatabase()
-    db.recreate_tables()
+    db.recreate_base_data()
+    template_values = db.retrieve_status()
     db.close_connection()
 
-    template_values = {'flag':True}
+    template_values['flag'] = True
     template = JINJA_ENVIRONMENT.get_template('recreatedata.html')
     self.response.write(template.render(template_values))
         
