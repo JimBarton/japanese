@@ -35,9 +35,10 @@
       <hr>
       {% if flag == true %}
         <p>All database tables and data succesfully recreated</p>
-        <p>Number of kanji: {{ kanji }}</p>
-        <p>Number of vocabulary: {{ vocabulary }}</p>
-        <p>Number of grammar terms: {{ grammar }}</p>
+        <p>Number of kanji: {{ Kanji }}</p>
+        <p>Number of vocabulary: {{ Vocabulary }}</p>
+        <p>Number of grammar terms: {{ Grammar }}</p>
+        <p>Number of kanji/vocab cross-references: {{ KanjiVocabulary }}</p>
       {% else %}
         <form action="/recreatedata" method="post">
           <p>Click the following button to recreate all data in the database</p>

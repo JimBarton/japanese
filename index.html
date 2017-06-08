@@ -31,7 +31,7 @@
       <p><a href="#">Left Link</a></p>
     </div> -->
     <div class="col-sm-3 text-left"> 
-      <h1>Kanji Lookup {% if kanji_id %} {{ kanji_id }} {% endif %}</h1>
+      <h1>Kanji Lookup {% if literal %} {{ literal }} {% endif %}</h1>
     </div>
     <div class="col-sm-9 text-left" style="padding-top:20px">
       <form action="/" method="post">
@@ -44,14 +44,14 @@
   <div class="row">
     <hr>
   </div>
-  {% if kanji_id %}
+  {% if literal %}
   <div class="row">
     <div class="col-sm-3 text-left">
       <p>Grade: {{ grade }}</p>
       <p>Strokecount: {{ strokecount }}</p>
       <p>Frequency: {{ frequency }}</p>
       <p>JLPT Level: {{ jlpt }}</p>
-    {% if kanji_known == false %}
+    {% if known == false %}
       <form action="/" method="post">
         <div>Unknown <input type="submit" name="known" value="Mark as known"></div>
       </form>
@@ -63,12 +63,12 @@
     </div>
     <div class="col-sm-3 text-left">
     {% for vocab in vocab_list %}
-      <p>{{ vocab[0]|safe }}</p>
+      <p>{{ vocab[1]|safe }}</p>
     {% endfor %}
     </div>
     <div class="col-sm-3 text-left">
     {% for vocab in vocab_list %}
-      <p>{{ vocab[1] }}</p>
+      <p>{{ vocab[2] }}</p>
     {% endfor %}
     </div>
     <div class="col-sm-3 text-left">
