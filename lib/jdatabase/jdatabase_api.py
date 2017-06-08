@@ -48,15 +48,15 @@ class Jdatabase:
 
   def recreate_base_data(self):
     self.recreate_tables()
-    self.read_kanji_file()
-    self.read_vocabulary_file()
-    self.read_grammar_file()
+    self.parse_kanji_file()
+    self.parse_grammar_file()
+    self.parse_vocabulary_file()
   
   def recreate_tables(self):
     sql_command_list = []
     sql_command_list.append('DROP TABLE IF EXISTS kanji, vocabulary, grammar')
     sql_command_list.append('CREATE TABLE IF NOT EXISTS kanji(kanji_id VARCHAR(1) PRIMARY KEY,grade VARCHAR(2),strokecount VARCHAR(2),frequency VARCHAR(4),jlpt CHAR(1),kanji_known BOOLEAN)')
-    sql_command_list.append('CREATE TABLE IF NOT EXISTS vocabulary(vocab_id VARCHAR(255) PRIMARY KEY,reading VARCHAR(255),vocab_known BOOLEAN)')
+    sql_command_list.append('CREATE TABLE IF NOT EXISTS vocabulary(vocab_id VARCHAR(255) PRIMARY KEY,reading VARCHAR(255),char_list VARCHAR(255),vocab_known BOOLEAN)')
     sql_command_list.append('CREATE TABLE IF NOT EXISTS grammar(grammar_id VARCHAR(255) PRIMARY KEY,description VARCHAR(255))')
     for sql_command in sql_command_list:
       print sql_command
@@ -65,7 +65,7 @@ class Jdatabase:
       except MySQLdb.Error as e:
         print e
       
-  def read_kanji_file(self):
+  def parse_kanji_file(self):
     kanji = Jkanji()
  
     # read the kanjidic file
@@ -105,54 +105,77 @@ class Jdatabase:
           kanji.dict['frequency'] = ''
           kanji.dict['jlpt'] = ''
 
-  def read_vocabulary_file(self):
+  def parse_vocabulary_file(self):
     vocab = Jvocab()
     entry_list = []
     senses_list = []
-    count = 0
+    vocab_char_list = []
     # read the vocab file
     with self.open_function(self.vocab_xmlfile) as vocab_file:
       # read each line in the vocab file and extract each vocab and its data based on tags
       for line in vocab_file:
+        # entry tag us start of a new vocab entry. Store lines until get to end of entry
         if "<entry>" in line:
-          # start of a new vocab entry to process it
           for line in vocab_file:
             entry_list.append(line)
+            # if end of this vocabulary element, extract required information
             if "</entry>" in line:
-              # end of this vocabulary element so extract required information
               entry_string = "".join(entry_list)
-              if "<re_pri>" in entry_string:
+              # we are only interested in storing entries marked as "common"
+              common_entry = re.search("news1|ichi1|spec1|spec2|gai1", entry_string)
+              if common_entry:
+                # search for the keb tab which stores the literal vocab (primary key)
                 search = re.search(r'<keb>(.+)</keb>',entry_string)
                 if search:
                   vocab.dict['vocab_id'] = search.group(1)
+                # reb tag stores the reading of the vocab in hiragana (pronunciation)
+                # if there's a reb tag and no keb tag then just store the reading as the vocab
+                # this probably means the vocab doesn't contain any kanji
                 search = re.search(r'<reb>(.+)</reb>',entry_string)
                 if search:
                   vocab.dict['reading'] = search.group(1)
                   if vocab.dict['vocab_id'] == '':
                     vocab.dict['vocab_id'] = search.group(1)
+                # there is one sense tag for each English meaning of the vocab
+                # loop over each and extract the grammar marker (pos) and English words (gloss)
+                # store the extracted data as the meanings
+                # THIS IS TBD!!!
                 senses = re.findall(r'<sense>(.+)</sense>',entry_string, re.DOTALL)
                 for sense in senses:
                   pos = re.search(r'<pos>(.+)</pos>',sense)
+                  #print pos.group(1) + " -latest pos"
                   glosses = re.findall(r'<gloss>(.+)</gloss>',sense)
                   senses_list.append((pos.group(1),glosses))
                 vocab.dict['meanings'] = senses_list
+                
+                # we also break down and store each vocabulary entry into its list of characters
+                # for example 辞書 will also be stored as 辞、書. 聞く as 聞、く
+                vocab_char_list = re.findall(r'(.)',vocab.dict['vocab_id'].decode('utf8'))
+                #print vocab_char_list
+                #char_list = list(vocab.dict['vocab_id'])
+                #print char_list
+                #for each_char in vocab.dict['vocab_id'].decode('utf8'):
+                  #vocab_char_list.append(each_char)
+                  #print repr(each_char)
+                vocab.dict['char_list'] = ''.join(vocab_char_list)
+                #vocab.dict['char_list'] = ','.join(vocab.dict['vocab_id'])
+                #vocab.dict['char_list'] = vocab.dict['vocab_id'].decode('utf8')
+
+                # insert the retreived vocabulary entry into the database
+                #print vocab.dict
+                #print repr(vocab.dict['char_list'])
+                #sys.exit(1)
                 self.insert_vocab(vocab)
-                status = str(count) + '...'
-                #if count%1000:
-                 #caller.response.write(status)
-                count += 1
+                #sys.exit(1)
+              # clear the local vocab entry ready for the next one
               entry_list = []
               vocab.dict['vocab_id'] = ''
               vocab.dict['reading'] = ''
               vocab.dict['meanings'][:] = []
+              vocab.dict['char_list'] = []
               break
-          #search stored text for <r_ele>
-          #if found
-            #extract required info from stored text and write to database
-          #clear the stored text
-          #break from this inner for loop
   
-  def read_grammar_file(self):
+  def parse_grammar_file(self):
     with self.open_function(self.grammar_textfile) as grammar_file:
       content = grammar_file.read()
       grammar_tuples = re.findall(r'(\S+)\s+(.+)',content)
@@ -160,9 +183,7 @@ class Jdatabase:
         self.insert_grammar(id,description)
   
   def retrieve_kanji(self, character):
-    kanji = Jkanji()
-    vocab_list = []
-    vocabulary = Jvocab()
+    kanji_dict = {}
     sql_command = 'SELECT * FROM kanji WHERE kanji_id = (%s)'
     try:
       self.cursor.execute(sql_command, (character))
@@ -170,18 +191,26 @@ class Jdatabase:
       print e
     else:
       data = self.cursor.fetchone()
-      #print self.cursor._last_executed
-      #print self.cursor.rowcount
-      #print data
-      kanji.dict['kanji_id'], kanji.dict['grade'], kanji.dict['strokecount'], kanji.dict['frequency'], kanji.dict['jlpt'], kanji.dict['kanji_known'] = data
+      if data:
+        #print data
+        kanji_dict['kanji_id'], kanji_dict['grade'] ,kanji_dict['strokecount'], kanji_dict['frequency'], kanji_dict['jlpt'], kanji_dict['kanji_known'] = data
+      else:
+        print "Kanji does not exist in the database"
     
-    sql_command = 'SELECT vocab_id FROM vocabulary WHERE vocab_id LIKE (%s)'
+    return kanji_dict
+
+  def retrieve_kanji_with_vocab(self, character):
+    kanji = self.retrieve_kanji(character)
+    vocabulary = Jvocab()
+    sql_command = 'SELECT * FROM vocabulary WHERE vocab_id LIKE (%s)'
     try:
       self.cursor.execute(sql_command, ("%" + character + "%"))
     except MySQLdb.Error as e:
       print e
     else:
-      kanji.dict['vocab_list'] = self.cursor.fetchall()
+      vocab_tuple = self.cursor.fetchall()
+      kanji['vocab_list'] = [list(elem) for elem in vocab_tuple]
+    #print kanji
     return kanji
 
   def retrieve_status(self):
@@ -200,10 +229,17 @@ class Jdatabase:
     except MySQLdb.Error as e:
       print e
 
-  def insert_vocab(self, vocab):
-    sql_command = 'INSERT INTO vocabulary(vocab_id, reading, vocab_known)VALUES(%s,%s,FALSE)'
+  def set_kanji_known_flag(self, character, flag):
+    sql_command = "UPDATE kanji SET kanji_known = (%s) WHERE kanji_id = (%s)";
     try:
-      self.cursor.execute(sql_command, (vocab.dict['vocab_id'], vocab.dict['reading']))
+      self.cursor.execute(sql_command, (flag, character))
+    except MySQLdb.Error as e:
+      print e
+
+  def insert_vocab(self, vocab):
+    sql_command = 'INSERT INTO vocabulary(vocab_id, reading, char_list, vocab_known)VALUES(%s,%s,%s,FALSE)'
+    try:
+      self.cursor.execute(sql_command, (vocab.dict['vocab_id'], vocab.dict['reading'], vocab.dict['char_list']))
     except MySQLdb.Error as e:
       print e
 
@@ -242,7 +278,9 @@ class Jvocab:
   def __init__(self):
     self.dict = {'vocab_id': '','reading': '',
            'meanings':[],
-           'vocab_known':''}
+           'char_list': '',
+           'vocab_known': ''
+           }
 
 class Jgrammar:
   def __init__(self):
