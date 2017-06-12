@@ -31,10 +31,10 @@
       <p><a href="#">Left Link</a></p>
     </div> -->
     <div class="col-sm-3 text-left"> 
-      <h1>Kanji Lookup {% if literal %} {{ literal }} {% endif %}</h1>
+      <h1>Kanji Lookup {% if known == true %} <span style="color:blue">{{ literal }}</span> {% else %} {{ literal }} {% endif %}</h1>
     </div>
     <div class="col-sm-9 text-left" style="padding-top:20px">
-      <form action="/" method="post">
+      <form method="post">
         <div><input type="text" name="lookup" maxlength="1" placeholder="Enter single kanji to retrieve"></div>
         <div><input type="submit" value="Retrieve"></div>
       </form>
@@ -52,26 +52,32 @@
       <p>Frequency: {{ frequency }}</p>
       <p>JLPT Level: {{ jlpt }}</p>
     {% if known == false %}
-      <form action="/" method="post">
+      <form method="post">
         <div>Unknown <input type="submit" name="known" value="Mark as known"></div>
       </form>
     {% else %}
-      <form action="/" method="post">
+      <form method="post">
         <div>Known <input type="submit" name="unknown" value="Mark as unknown"></div>
       </form>
     {% endif %}
     </div>
-    <div class="col-sm-3 text-left">
-    {% for vocab in vocab_list %}
-      <p>{{ vocab[1]|safe }}</p>
+    <div class="col-sm-2 text-left">
+    {% for vocab in vocab_display_list %}
+      <p>{% for kanji in vocab[1] %}
+        {% if not vocab[2][loop.index0] %}
+          {{ kanji }}
+        {% else %}
+          <span style="color:blue">{{ kanji }}</span>
+        {% endif %}
+      {% endfor %}</p>
     {% endfor %}
     </div>
-    <div class="col-sm-3 text-left">
-    {% for vocab in vocab_list %}
-      <p>{{ vocab[2] }}</p>
+    <div class="col-sm-5 text-left">
+    {% for vocab in vocab_display_list %}
+      <p>{{ vocab[0][2] }}</p>
     {% endfor %}
     </div>
-    <div class="col-sm-3 text-left">
+    <div class="col-sm-2 text-left">
     </div>
   </div>
   {% endif %}
