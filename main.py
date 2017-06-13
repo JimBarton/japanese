@@ -44,7 +44,7 @@ class MainPage(webapp2.RequestHandler):
 class KanjiLookup(webapp2.RequestHandler):
   """ Class for displaying results of kanji lookup. Allows user to perform various operations
       on the displayed data """
-  template = JINJA_ENVIRONMENT.get_template('kanji.html')
+  template = JINJA_ENVIRONMENT.get_template('kanji2.html')
   get_keys = ['id','literal','grade','strokecount','frequency','jlpt','known','style', 'vocab_list']
   
   def get(self):

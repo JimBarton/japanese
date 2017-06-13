@@ -78,21 +78,18 @@
 
 {# Start main container #}
 <div class="container-fluid text-center">    
+{# The page subtitle changes for each page #}
+{% block subtitle %}
   <div class="row">
 <!--    <div class="col-sm-2 sidenav">
       <p><a href="#">Left Link</a></p>
     </div> -->
-{# The page subtitle changes for each page #}
-{% block subtitle %}
     <div class="col-sm-3 text-left"> 
       <h1>Template</h1>
     </div>
+  </div>
 {% endblock %}
-    <hr>
-  </div>
-  <div class="row">
-    <hr>
-  </div>
+
 {# The next rows form the main page content so blank in this template #}
 {% block maincontent %}
 {% endblock %}

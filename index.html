@@ -6,13 +6,12 @@
 {% endblock %}
 
 {% block subtitle %}
-    <div class="col-sm-3 text-left"> 
-      <h1>Kanji Lookup</h1>
-    </div>
-    <div class="col-sm-9 text-left" style="padding-top:20px">
+  <div class="row">
+    <div class="col-sm-12 text-left" style="padding-top:20px">
       <form method="post">
-        <div><input type="text" name="lookup" maxlength="1" placeholder="Enter single kanji to retrieve"></div>
-        <div><input type="submit" value="Retrieve"></div>
+        <input type="text" name="lookup" maxlength="1" placeholder="Enter single kanji to retrieve">
+        <input type="submit" value="Retrieve">
       </form>
     </div>
+  </div>
 {% endblock %}
