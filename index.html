@@ -1,37 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<link rel="import" href="/html/head.html">
-</head>
-<body>
-<nav class="navbar navbar-inverse">
-  <div class="container-fluid">
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>                        
-      </button>
-      <a class="navbar-brand" href="/">Logo</a>
-    </div>
-    <div class="collapse navbar-collapse" id="myNavbar">
-      <ul class="nav navbar-nav">
+{% extends "jinja_template.html" %}
+
+{% block navigation %}
         <li class="active"><a href="/">Kanji Lookup</a></li>
         <li class="inactive"><a href="/recreatedata">Recreate Data</a></li>
-      </ul>
-      <ul class="nav navbar-nav navbar-right">
-<!--        <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li> -->
-      </ul>
-    </div>
-  </div>
-</nav>
-<div class="container-fluid text-center">    
-  <div class="row">
-<!--    <div class="col-sm-2 sidenav">
-      <p><a href="#">Left Link</a></p>
-    </div> -->
+{% endblock %}
+
+{% block subtitle %}
     <div class="col-sm-3 text-left"> 
-      <h1>Kanji Lookup {% if known == true %} <span style="color:blue">{{ literal }}</span> {% else %} {{ literal }} {% endif %}</h1>
+      <h1>Kanji Lookup</h1>
     </div>
     <div class="col-sm-9 text-left" style="padding-top:20px">
       <form method="post">
@@ -39,53 +15,4 @@
         <div><input type="submit" value="Retrieve"></div>
       </form>
     </div>
-    <hr>
-  </div>
-  <div class="row">
-    <hr>
-  </div>
-  {% if literal %}
-  <div class="row">
-    <div class="col-sm-3 text-left">
-      <p>Grade: {{ grade }}</p>
-      <p>Strokecount: {{ strokecount }}</p>
-      <p>Frequency: {{ frequency }}</p>
-      <p>JLPT Level: {{ jlpt }}</p>
-    {% if known == false %}
-      <form method="post">
-        <div>Unknown <input type="submit" name="known" value="Mark as known"></div>
-      </form>
-    {% else %}
-      <form method="post">
-        <div>Known <input type="submit" name="unknown" value="Mark as unknown"></div>
-      </form>
-    {% endif %}
-    </div>
-    <div class="col-sm-2 text-left">
-    {% for vocab in vocab_display_list %}
-      <p>{% for kanji in vocab[1] %}
-        {% if not vocab[2][loop.index0] %}
-          {{ kanji }}
-        {% else %}
-          <span style="color:blue">{{ kanji }}</span>
-        {% endif %}
-      {% endfor %}</p>
-    {% endfor %}
-    </div>
-    <div class="col-sm-5 text-left">
-    {% for vocab in vocab_display_list %}
-      <p>{{ vocab[0][2] }}</p>
-    {% endfor %}
-    </div>
-    <div class="col-sm-2 text-left">
-    </div>
-  </div>
-  {% endif %}
-<!--    <div class="col-sm-2 sidenav">
-      <div class="well">
-        <p>Right Link</p>
-      </div>
-    </div> -->
-</div>
-</body>
-</html>
+{% endblock %}

@@ -294,9 +294,12 @@ class Jdatabase:
       # for each returned vocab, retrieve all its kanji one by one and create a list of the kanji and
       # corresponding list of known flags. If the kanji is not in the database (it is not a jouyou kanji)
       # then we can set the known flag to 'unknown'
-      # NB: this needs improving to not retrieve kanji that have already appeared before which is especially
+      # NB: this needs optimising to not retrieve kanji that have already appeared before which is especially
       # true for the target kanji as this obviously appears in all the vocab and doesn't need to be retrieved
       # multiple times
+      #print vocab_tuple
+      #character_list = set([a for x in vocab_tuple for a in x[1]])
+      #print character_list
       for elem, vocab in enumerate(vocab_tuple):
         char_list = []
         known_list = []

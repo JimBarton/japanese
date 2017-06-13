@@ -3,7 +3,9 @@
 
 import os
 import sys
+import re
 import cgi
+import urllib
 import logging
 logging.basicConfig(level=logging.INFO)
 
@@ -33,58 +35,52 @@ class MainPage(webapp2.RequestHandler):
     self.response.write(self.template.render())
 
   def post(self):
-    """ Retrieve the kanji character input by the user and get the corresponding entry from
-         the database. Add this to the appengine memory cache for easy retrieval and then
-         redirect to the lookup page for this kanji which has a dynamic URL of the kanji utf8
-         in ascii form
+    """ Retrieve the kanji character input by the user and redirect to the lookup
+        page for this kanji
     """
     kanji_literal = cgi.escape(self.request.get('lookup'))
-    kanji_dict = db.retrieve_kanji(kanji_literal)
-    try:
-      added = memcache.set_multi(kanji_dict)
-      if not added:
-        logging.error('Memcache set failed %s', added)
-    except ValueError:
-      logging.error('Memcache set failed - data larger than 1MB')
-    self.redirect("/kanji/"+repr(kanji_literal)[3:-1])
+    self.redirect('kanji?%s' % urllib.urlencode({'character': kanji_literal.encode('utf-8')}))
 
 class KanjiLookup(webapp2.RequestHandler):
   """ Class for displaying results of kanji lookup. Allows user to perform various operations
       on the displayed data """
-  template = JINJA_ENVIRONMENT.get_template('index.html')
-  get_keys = ['vocab_list','id','literal','grade','strokecount','frequency','jlpt','known','style']
-
-  def get(self, kanji_id):
-    """ Get the current kanji from the memory cache and render it """
-    current_data = memcache.get_multi(self.get_keys)
-    logging.info(current_data)
+  template = JINJA_ENVIRONMENT.get_template('kanji.html')
+  get_keys = ['id','literal','grade','strokecount','frequency','jlpt','known','style', 'vocab_list']
+  
+  def get(self):
+    """ Get the current kanji and render it """
+    kanji_literal = self.request.get('character')
+    print "yippee!"
+    logging.info(kanji_literal)
+    
+    current_data = db.retrieve_kanji(kanji_literal)
     current_data['vocab_display_list'] = db.retrieve_kanji_vocab(current_data['literal'])
-    print 'current_data'
-    print current_data
+    logging.info(current_data)
+
+    try:
+      added = memcache.set_multi(current_data)
+      if not added:
+        logging.error('Memcache set failed %s', added)
+    except ValueError:
+      logging.error('Memcache set failed - data larger than 1MB')
+
     self.response.write(self.template.render(current_data))
 
-  def post(self, kanji_id):
+  def post(self):
     """ Retrieve any input from the user and update data accordingly"""
     current_data = memcache.get_multi(self.get_keys)
     logging.info(current_data)
     # If this is a new kanji lookup then retrieve it from the database and add it to memory cache
     if 'lookup' in self.request.POST:
       kanji_literal = cgi.escape(self.request.get('lookup'))
-      kanji_dict = db.retrieve_kanji(kanji_literal)
-      try:
-        added = memcache.set_multi(kanji_dict)
-        if not added:
-          logging.error('Memcache set failed %s', added)
-      except ValueError:
-        logging.error('Memcache set failed - data larger than 1MB')
-      self.redirect("/kanji/"+repr(kanji_literal)[3:-1])
-    # If the user has updated this kanji 'known' status then reflect this in the current kanji data
-    elif 'known' in self.request.POST:
-      current_data['known'] = True
-    elif 'unknown' in self.request.POST:
-      current_data['known'] = False
-    db.update_known_status(current_data)
-    current_data['vocab_display_list'] = db.retrieve_kanji_vocab(current_data['literal'])
+      self.redirect('kanji?%s' % urllib.urlencode({'character': kanji_literal.encode('utf-8')}))
+    else:
+      if 'known' in self.request.POST:
+        current_data['known'] = True
+      elif 'unknown' in self.request.POST:
+        current_data['known'] = False
+      db.update_known_status(current_data)
+      current_data['vocab_display_list'] = db.retrieve_kanji_vocab(current_data['literal'])
     
     # render the current kanji
     self.response.write(self.template.render(current_data))
@@ -112,6 +108,6 @@ class RecreateData(webapp2.RequestHandler):
         
 app = webapp2.WSGIApplication([
     (r'/', MainPage),
-    (r'/kanji/(.+)', KanjiLookup),
+    (r'/kanji', KanjiLookup),
     (r'/recreatedata', RecreateData)
 ], debug=True)

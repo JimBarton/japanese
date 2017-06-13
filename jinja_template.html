@@ -65,7 +65,7 @@
       <ul class="nav navbar-nav">
 {# Navigation block. Navigation bar status dependent on URL #}
 {% block navigation %}
-        <li class="active"><a href="/">Kanji Lookup</a></li>
+        <li class="inactive"><a href="/">Kanji Lookup</a></li>
         <li class="inactive"><a href="/recreatedata">Recreate Data</a></li>
 {% endblock %}
       </ul>
@@ -82,18 +82,12 @@
 <!--    <div class="col-sm-2 sidenav">
       <p><a href="#">Left Link</a></p>
     </div> -->
-    <div class="col-sm-3 text-left"> 
 {# The page subtitle changes for each page #}
-{% block subtitle }
-      <h1>Kanji Lookup {% if known == true %} <span style="color:blue">{{ literal }}</span> {% else %} {{ literal }} {% endif %}</h1>
+{% block subtitle %}
+    <div class="col-sm-3 text-left"> 
+      <h1>Template</h1>
+    </div>
 {% endblock %}
-    </div>
-    <div class="col-sm-9 text-left" style="padding-top:20px">
-      <form method="post">
-        <div><input type="text" name="lookup" maxlength="1" placeholder="Enter single kanji to retrieve"></div>
-        <div><input type="submit" value="Retrieve"></div>
-      </form>
-    </div>
     <hr>
   </div>
   <div class="row">
