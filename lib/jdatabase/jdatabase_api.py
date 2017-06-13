@@ -17,7 +17,13 @@ class Jdatabase:
   _charset = 'utf8'
 
   def __init__(self):
-    # set up the database connection
+    """ Set up the database connection. We use the environment variables from above whih are picked up
+        by appenginefrom the app.yaml file. We need to check whether we are in production or not and configure
+        connection accordingly.
+        We also set up the file bucket to use. This should work in development using stub functions but doesn't
+        seem to so currently picking up from local directory.
+        After finding the correct bucket we set names for the 3 files we need to parse
+    """
     if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/'):
       cloudsql_unix_socket = os.path.join('/cloudsql', _connection_name)
       self.conn = MySQLdb.connect(unix_socket=cloudsql_unix_socket, user=self._user, passwd=self._password, db=self._database, charset=self._charset)
@@ -47,6 +53,8 @@ class Jdatabase:
       self.conn.close()
 
   def recreate_base_data(self):
+    """ This function recreates all the database tables by re-parsing the files and populating the tables
+    """
     self.recreate_tables()
     self.parse_kanji_file()
     self.parse_grammar_file()
@@ -54,6 +62,7 @@ class Jdatabase:
     #self.create_kanjivocab()
   
   def recreate_tables(self):
+    """ This function deletes any previous tables from the database and recreates them """
     sql_command_list = []
     sql_command_list.append('DROP TABLE IF EXISTS KanjiVocabulary, Kanji, Vocabulary, Grammar')
     sql_command_list.append('CREATE TABLE IF NOT EXISTS Kanji('\
@@ -90,6 +99,11 @@ class Jdatabase:
         self.conn.commit()
       
   def parse_kanji_file(self):
+    """ Parse the kanji XML file. There is one <literal> tag for each kanji. We read line by line
+        and search for particular tags then pick up what is inside the tag. When we reach the end
+        of a <literal> tag then we know that we have finished reading one character and store the
+        read data to the database
+        """
     kanji = {'literal':'',   
              'grade': '',
              'strokecount': '',
@@ -134,6 +148,11 @@ class Jdatabase:
           kanji['jlpt'] = ''
 
   def parse_vocabulary_file(self):
+    """ Parse the vocabulary XML file. Each entry is wrapped in an <entry> tag. We read line by line
+        until we find the start of this tag and then start storing the following lines until we reach
+        the end of the tag. We have then stored an entire entry and can parse it, picking out the
+        appropriate info and writing to the database
+    """
     vocab = {'literal': '',
              'reading': '',
              'meanings':''}
@@ -190,6 +209,12 @@ class Jdatabase:
               break
   
   def create_kanjivocab(self):
+    """ This creates a mapping table for kanji character to vocabulary. One character can appear in
+        many vocab and one vocab can contain many kani. However this table is not actually used at
+        the moment - I just created it as part of studying mapping tables. As the kanji are embedded
+        in each vocab anyway I don't think the table is actually needed
+    """
+    # get all the kanji from the Kanji table
     sql_command = 'SELECT * FROM Kanji'
     try:
       self.cursor.execute(sql_command)
@@ -197,34 +222,32 @@ class Jdatabase:
       print e
     else:
       kanji_tuple = self.cursor.fetchall()
-      #print "kanji_tuple"
-      #print kanji_tuple
+      # select all vocabulary entries where each kanji appears
       sql_command1 = 'SELECT * FROM Vocabulary WHERE literal LIKE (%s)'
       for kanji in kanji_tuple:
         try:
-          #print repr(kanji[1])
           self.cursor.execute(sql_command1, ("%" + kanji[1] + "%"))
         except MySQLdb.Error as e:
           print e
         else:
           vocab_tuple = self.cursor.fetchall()
-          #print "vocab_tuple"
-          #print vocab_tuple
+          # insert a row in the table for each vocab entry that corresponds to this kanji
           sql_command2 = 'INSERT INTO KanjiVocabulary '\
             'VALUES(%s,%s)'
           for vocab in vocab_tuple:
             try:
-              #print "inserting"
-              #print kanji[0], vocab[0]
               self.cursor.execute(sql_command2, (kanji[0],vocab[0]))
             except MySQLdb.Error as e:
               print e
             else:
               self.conn.commit()
-              #print "inserted"
-              #sys.exit(1)
   
   def parse_grammar_file(self):
+    """ Parse the grammar text file. This is a list of 2 whitespace separated columns.
+        The first column is the grammar type and the second is a description. We read
+        the entire file and then unpack the tuple into field which is then written to
+        the database
+    """
     with self.open_function(self.grammar_textfile) as grammar_file:
       content = grammar_file.read()
       grammar_tuples = re.findall(r'(\S+)\s+(.+)',content)
@@ -232,6 +255,9 @@ class Jdatabase:
         self.insert_grammar(id,description)
   
   def retrieve_kanji(self, character):
+    """ Retrieve a kanji entry from the database, passing the character itself as input.
+        We return a dictionary of the unpacked tuple
+    """
     kanji_dict = {}
     sql_command = 'SELECT * FROM Kanji WHERE literal = (%s)'
     try:
@@ -249,9 +275,15 @@ class Jdatabase:
     return kanji_dict
 
   def retrieve_kanji_vocab(self, character):
+    """ Retrieves all vocabulary containing a given kanji character, passed as argument.
+        We return a list of the vocab lists with each vocab list having the following form:
+        (tuple of the vocab entry in the database)[list of kanji in the vocab][list of known flags for the kanji]
+        E.g. (5949, u'\u6d77\u85fb', u'\u304b\u3044\u305d\u3046', 0), [u'\u6d77', u'\u85fb'], [1, 0]
+             (vocab id, vocab literal, vocab in kana, vocabulary known flag), [list of kanji in vocab], [known flags for the kanji]]
+    """
     vocab_display_list = []
 
-    # retrieve the vocab
+    # retrieve the vocab for this kanji
     sql_command = 'SELECT * FROM Vocabulary WHERE literal LIKE (%s)'   
     try:
       self.cursor.execute(sql_command, ("%" + character + "%"))
@@ -259,6 +291,12 @@ class Jdatabase:
       print e
     else:
       vocab_tuple = self.cursor.fetchall()
+      # for each returned vocab, retrieve all its kanji one by one and create a list of the kanji and
+      # corresponding list of known flags. If the kanji is not in the database (it is not a jouyou kanji)
+      # then we can set the known flag to 'unknown'
+      # NB: this needs improving to not retrieve kanji that have already appeared before which is especially
+      # true for the target kanji as this obviously appears in all the vocab and doesn't need to be retrieved
+      # multiple times
       for elem, vocab in enumerate(vocab_tuple):
         char_list = []
         known_list = []
@@ -270,13 +308,17 @@ class Jdatabase:
           else:
             char_list.append(character)
             known_list.append(0)
+        # append the vocab tuple, kanji list and known list to complex vocab list
         vocab_display_list.append([vocab,char_list,known_list])
 
+    # return the complex list
     return vocab_display_list
 
   def retrieve_status(self):
+    """ Retrieves the number of entries in each table and returns this as as dictionary """
     status = {}
-    tables = ('Kanji', 'Vocabulary', 'Grammar', 'KanjiVocabulary')
+    #tables = ('Kanji', 'Vocabulary', 'Grammar', 'KanjiVocabulary')
+    tables = ('Kanji', 'Vocabulary', 'Grammar')
     for table in tables:
       sql_command = 'SELECT * FROM ' + table
       self.cursor.execute(sql_command)
@@ -284,6 +326,9 @@ class Jdatabase:
     return status
 
   def insert_kanji(self, kanji):
+    """ Inserts a new kanji into the database using a kanji dictionary as input. Always marked as
+        unknown in the first instance
+    """
     sql_command = 'INSERT INTO Kanji(literal, grade, strokecount, frequency, jlpt, known)VALUES(%s,%s,%s,%s,%s,FALSE)'
     try:
       self.cursor.execute(sql_command, (kanji['literal'], kanji['grade'], kanji['strokecount'], kanji['frequency'], kanji['jlpt']))
@@ -293,6 +338,8 @@ class Jdatabase:
       self.conn.commit()
 
   def insert_vocab(self, vocab):
+    """ Inserts a new vocabulary entry into the database using a vocab dictionary as input
+    """
     sql_command = 'INSERT INTO Vocabulary(literal, reading, known)VALUES(%s,%s,FALSE)'
     try:
       self.cursor.execute(sql_command, (vocab['literal'], vocab['reading']))
@@ -302,6 +349,7 @@ class Jdatabase:
       self.conn.commit()
 
   def insert_grammar(self,name,description):
+    """ Inserts a new grammar entry into the database using a pair of args for type and description """
     sql_command = 'INSERT INTO Grammar(name, description)VALUES(%s,%s)'
     try:
       self.cursor.execute(sql_command, (name, description))
@@ -319,6 +367,7 @@ class Jdatabase:
           self.conn.commit()
 
   def update_known_status(self, kanji):
+    """ Update the 'known' status of a kanji using a kanji dictionary as input """
     sql_command = 'UPDATE Kanji SET known=(%s) WHERE id=(%s)'
     try:
       self.cursor.execute(sql_command, (kanji['known'], kanji['id']))
