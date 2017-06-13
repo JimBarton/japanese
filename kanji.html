@@ -1,0 +1,56 @@
+{% extends "jinja_template.html" %}
+
+{% block navigation %}
+        <li class="inactive"><a href="/">Kanji Lookup</a></li>
+        <li class="inactive"><a href="/recreatedata">Recreate Data</a></li>
+{% endblock %}
+
+{% block subtitle %}
+    <div class="col-sm-3 text-left"> 
+      <h1>Kanji: {% if known == true %} <span style="color:blue, padding-left:30px">{{ literal }}</span> {% else %} {{ literal }}　{% endif %}</h1>
+    </div>
+    <div class="col-sm-9 text-left" style="padding-top:20px">
+      <form method="post">
+        <div><input type="text" name="lookup" maxlength="1" placeholder="Enter single kanji to retrieve"></div>
+        <div><input type="submit" value="Retrieve"></div>
+      </form>
+    </div>
+{% endblock %}
+
+{% block maincontent %}
+  <div class="row content">
+    <div class="col-sm-3 text-left">
+      <p>Grade: {{ grade }}</p>
+      <p>Strokecount: {{ strokecount }}</p>
+      <p>Frequency: {{ frequency }}</p>
+      <p>JLPT Level: {{ jlpt }}</p>
+    {% if known == false %}
+      <form method="post">
+        <div>Unknown <input type="submit" name="known" value="Mark as known"></div>
+      </form>
+    {% else %}
+      <form method="post">
+        <div>Known <input type="submit" name="unknown" value="Mark as unknown"></div>
+      </form>
+    {% endif %}
+    </div>
+    <div class="col-sm-2 text-left">
+    {% for vocab in vocab_display_list %}
+      <p>{% for kanji in vocab[1] %}
+        {% if not vocab[2][loop.index0] %}
+          {{ kanji }}
+        {% else %}
+          <span style="color:blue">{{ kanji }}</span>
+        {% endif %}
+      {% endfor %}</p>
+    {% endfor %}
+    </div>
+    <div class="col-sm-5 text-left">
+    {% for vocab in vocab_display_list %}
+      <p>{{ vocab[0][2] }}</p>
+    {% endfor %}
+    </div>
+    <div class="col-sm-2 text-left">
+    </div>
+  </div>
+{% endblock %}
