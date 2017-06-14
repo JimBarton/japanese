@@ -16,24 +16,24 @@
   </div>
   <div class="row">
     <div class="col-sm-12 text-left"> 
-      <h2>Kanji: {% if known == true %} <span style="color:blue">{{ literal }}</span> {% else %} {{ literal }}　{% endif %}</h2>
+      <h2>Kanji: {% if kanji_dict.known == true %} <span style="color:blue">{{ kanji_dict.literal }}</span> {% else %} {{ kanji_dict.literal }}　{% endif %}</h2>
     </div>
   </div>
   <div class="row">
     <div class="col-sm-2 text-left">
-      <p>Grade: {{ grade }}</p>
+      <p>Grade: {{ kanji_dict.grade }}</p>
     </div>
     <div class="col-sm-2 text-left">
-      <p>Strokecount: {{ strokecount }}</p>
+      <p>Strokecount: {{ kanji_dict.strokecount }}</p>
     </div>
     <div class="col-sm-2 text-left">
-      <p>Frequency: {{ frequency }}</p>
+      <p>Frequency: {{ kanji_dict.frequency }}</p>
     </div>
     <div class="col-sm-2 text-left"> 
-      <p>JLPT Level: {{ jlpt }}</p>
+      <p>JLPT Level: {{ kanji_dict.jlpt }}</p>
     </div>
     <div class="col-sm-4 text-left"> 
-      {% if known == false %}
+      {% if kanji_dict.known == false %}
       <form method="post">
         <div>Unknown <input type="submit" name="known" value="Mark as known"></div>
       </form>
@@ -51,27 +51,35 @@
       <h2>Vocabulary:</h2>
     </div>
   </div>
+  <form method="post">
   <div class="row">
-    {% for vocab in vocab_display_list %}
+    {%- for vocab in vocab_list -%}
     <div class="col-sm-2 text-left">
       <p>
-      {% for kanji in vocab[1] %}
-        {% if not vocab[2][loop.index0] %}
-          {{ kanji }}
-        {% else %}
-          <span style="color:blue">{{ kanji }}</span>
-        {% endif %}
-      {% endfor %}
+      {%- for each_kanji in vocab.literal -%}
+        {% set character_type = character_dict[each_kanji] %}
+        {%- if character_type == 0 -%}
+          <a href="{{ base_url }}{{ each_kanji }}" style="color:black">{{- each_kanji -}}</a>
+        {%- elif character_type == 1 -%}
+          <a href="{{ base_url }}{{ each_kanji }}" style="color:blue">{{- each_kanji -}}</a>
+        {%- elif character_type == -1 -%}
+          <span style="color:red">{{- each_kanji -}}</span>
+        {%- else -%}
+          {{- each_kanji -}}
+        {%- endif -%}
+      {%- endfor -%}
       </p>
     </div>
     <div class="col-sm-6 text-left">
-      <p>{{ vocab[0][2] }}</p>
+      <p>{{ vocab.reading }}</p>
     </div>
     <div class="col-sm-4 text-left">
       <div class="checkbox">
-        <label><input type="checkbox" value="">Hide</label>
+          <label><input type="checkbox" name="jimmy" value="{{ vocab.id }}"></label>
       </div>
     </div>
     {% endfor %}
   </div>
+    <input type="submit" name="jimmy" value="Jimmy">
+  </form>
 {% endblock %}

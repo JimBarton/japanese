@@ -281,8 +281,10 @@ class Jdatabase:
         E.g. (5949, u'\u6d77\u85fb', u'\u304b\u3044\u305d\u3046', 0), [u'\u6d77', u'\u85fb'], [1, 0]
              (vocab id, vocab literal, vocab in kana, vocabulary known flag), [list of kanji in vocab], [known flags for the kanji]]
     """
-    vocab_display_list = []
-
+    character_dict = {}
+    vocab_list = []
+    kanji_regex = u'[\u4E00-\u9FBF]+' # unicode range for kanji
+    
     # retrieve the vocab for this kanji
     sql_command = 'SELECT * FROM Vocabulary WHERE literal LIKE (%s)'   
     try:
@@ -300,22 +302,49 @@ class Jdatabase:
       #print vocab_tuple
       #character_list = set([a for x in vocab_tuple for a in x[1]])
       #print character_list
-      for elem, vocab in enumerate(vocab_tuple):
-        char_list = []
-        known_list = []
-        for character in vocab[1]:
+      character_set = set([a for x in vocab_tuple for a in x[1]])
+      for character in character_set:
+        if re.search(kanji_regex, character, re.U): # if this is a kanji character
           kanji = self.retrieve_kanji(character)
           if kanji:
-            char_list.append(character)
-            known_list.append(kanji['known'])
+            if kanji['known'] == True:
+              character_dict[character] = 1 # kanji in database and known
+            else:
+              character_dict[character] = 0 # kanji in database and not known
           else:
-            char_list.append(character)
-            known_list.append(0)
-        # append the vocab tuple, kanji list and known list to complex vocab list
-        vocab_display_list.append([vocab,char_list,known_list])
+            character_dict[character] = -1 # kanji not in database
+        else:
+          character_dict[character] = -2 # not a kanji (probably kana)
 
+      for elem,vocab in enumerate(vocab_tuple):
+        print "vocab"
+        print vocab
+        vocab_dict = {}
+        vocab_dict['id'], vocab_dict['literal'], vocab_dict['reading'], vocab_dict['known'] = vocab
+        print vocab_dict
+        vocab_list.append(vocab_dict)
+        print 'vocab_list'
+        print vocab_list
+      
+      
+      #for elem, vocab in enumerate(vocab_tuple):
+        #char_list = []
+        #known_list = []
+        #for character in vocab[1]:
+          #kanji = self.retrieve_kanji(character)
+          #if kanji:
+            #char_list.append(character)
+            #known_list.append(kanji['known'])
+          #else:
+            #char_list.append(character)
+            #known_list.append(0)
+        # append the vocab tuple, kanji list and known list to complex vocab list
+        #vocab_display_list.append([vocab,char_list,known_list])
+
+    print character_dict
+    print vocab_list
     # return the complex list
-    return vocab_display_list
+    return vocab_list, character_dict
 
   def retrieve_status(self):
     """ Retrieves the number of entries in each table and returns this as as dictionary """

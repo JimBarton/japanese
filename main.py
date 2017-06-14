@@ -21,7 +21,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
           
-#open a connection to the database
+# open a connection to the database
 db = jdatabase.Jdatabase()
 
 class MainPage(webapp2.RequestHandler):
@@ -44,18 +44,22 @@ class MainPage(webapp2.RequestHandler):
 class KanjiLookup(webapp2.RequestHandler):
   """ Class for displaying results of kanji lookup. Allows user to perform various operations
       on the displayed data """
-  template = JINJA_ENVIRONMENT.get_template('kanji2.html')
-  get_keys = ['id','literal','grade','strokecount','frequency','jlpt','known','style', 'vocab_list']
+  template = JINJA_ENVIRONMENT.get_template('kanji.html')
+  #get_keys = ['id','literal','grade','strokecount','frequency','jlpt','known','vocab_list']
+  get_keys = ['kanji_dict','vocab_list','character_dict']
+  base_url = r'kanji?character='
   
   def get(self):
     """ Get the current kanji and render it """
+    current_data = {}
+    current_data['base_url'] = self.base_url
     kanji_literal = self.request.get('character')
-    print "yippee!"
     logging.info(kanji_literal)
     
-    current_data = db.retrieve_kanji(kanji_literal)
-    current_data['vocab_display_list'] = db.retrieve_kanji_vocab(current_data['literal'])
+    current_data['kanji_dict'] = db.retrieve_kanji(kanji_literal)
+    current_data['vocab_list'], current_data['character_dict'] = db.retrieve_kanji_vocab(current_data['kanji_dict']['literal'])
     logging.info(current_data)
+    logging.info(self.request.url)
 
     try:
       added = memcache.set_multi(current_data)
@@ -71,6 +75,7 @@ class KanjiLookup(webapp2.RequestHandler):
     current_data = memcache.get_multi(self.get_keys)
     logging.info(current_data)
     # If this is a new kanji lookup then retrieve it from the database and add it to memory cache
+    logging.info(self.request.POST)
     if 'lookup' in self.request.POST:
       kanji_literal = cgi.escape(self.request.get('lookup'))
       self.redirect('kanji?%s' % urllib.urlencode({'character': kanji_literal.encode('utf-8')}))
@@ -80,7 +85,7 @@ class KanjiLookup(webapp2.RequestHandler):
       elif 'unknown' in self.request.POST:
         current_data['known'] = False
       db.update_known_status(current_data)
-      current_data['vocab_display_list'] = db.retrieve_kanji_vocab(current_data['literal'])
+      current_data['vocab_list'] = db.retrieve_kanji_vocab(current_data['literal'])
     
     # render the current kanji
     self.response.write(self.template.render(current_data))
