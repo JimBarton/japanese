@@ -1,0 +1,61 @@
+{% extends "jinja_template.html" %}
+
+{% block navigation %}
+    <div class="collapse navbar-collapse" id="myNavbar">
+      <ul class="nav navbar-nav">
+        <li class="inactive"><a href="/">Kanji Lookup</a></li>
+        <li class="active"><a href="/summary">Summary</a></li>
+        <li class="inactive"><a href="/recreatedata">Recreate Data</a></li>
+      </ul>
+    </div>
+{% endblock %}
+
+{% block subtitle %}
+  <div class="row">
+    <div class="col-sm-8 text-left" style="padding-top:20px">
+        <p>Order by:</p>
+        <select name="displayorder" id="displayorder">
+          <option value="strokecount">Strokecount</option>
+          <option value="frequency">Frequency</option>
+          <option value="grade">Grade</option>
+          <option value="jlpt">JLPT</option>
+        </select>
+        <button onClick="displayData()">Go</button>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-12 text-left"> 
+      <h2>Kanji Summary</h2>
+    </div>
+  </div>
+{% endblock %}
+
+{% block maincontent %}
+  <div id="hiddenFreq" style="display:none">
+  <div class="row">
+    <div class="col-sm-12 text-left"> 
+      <h2>By JLPT:</h2>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-12 text-left">
+      <p>
+      {%- for kanji in kanji_list|sort(attribute='jlpt') -%}
+        {% if kanji.known == true %}
+        <a href="{{ base_url }}{{ kanji.literal }}" style="color:blue">{{- kanji.literal -}}</a>
+        {% else %}
+        <a href="{{ base_url }}{{ kanji.literal }}" style="color:black">{{- kanji.literal -}}</a>
+        {% endif %}
+      {%- endfor -%}
+      </p>
+    </div>
+  </div>
+  </div>
+<script>
+function displayData(){
+  var toggleElement = document.getElementById("displayorder");
+  toggleElement.style.display = toggleElement.style.display === "block" ? "none" : "block";
+}
+</script>
+
+{% endblock %}
