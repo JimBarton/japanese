@@ -1,8 +1,13 @@
 {% extends "jinja_template.html" %}
 
 {% block navigation %}
+    <div class="collapse navbar-collapse" id="myNavbar">
+      <ul class="nav navbar-nav">
         <li class="active"><a href="/">Kanji Lookup</a></li>
+        <li class="inactive"><a href="/summary">Summary</a></li>
         <li class="inactive"><a href="/recreatedata">Recreate Data</a></li>
+      </ul>
+    </div>
 {% endblock %}
 
 {% block subtitle %}

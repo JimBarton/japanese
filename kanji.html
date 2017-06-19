@@ -1,17 +1,18 @@
 {% extends "jinja_template.html" %}
 
-{% block navigation %}
-        <li class="inactive"><a href="/">Kanji Lookup</a></li>
-        <li class="inactive"><a href="/recreatedata">Recreate Data</a></li>
-{% endblock %}
-
 {% block subtitle %}
   <div class="row">
-    <div class="col-sm-12 text-left" style="padding-top:20px">
+    <div class="col-sm-8 text-left" style="padding-top:20px">
       <form method="post">
         <input type="text" name="lookup" maxlength="1" placeholder="Enter single kanji to retrieve">
         <input type="submit" value="Retrieve">
       </form>
+    </div>
+    <div class="col-sm-4 text-left" style="padding-top:20px">
+        <input type="button" name="showhidden" value="Shown/hide hidden vocab" onClick="showHidden()">
+        <form method="post" id="hideknow">
+          <input type="submit" name="vocabupdatelist" value="Update vocab" form="hideknow">
+        </form>
     </div>
   </div>
   <div class="row">
@@ -33,53 +34,120 @@
       <p>JLPT Level: {{ kanji_dict.jlpt }}</p>
     </div>
     <div class="col-sm-4 text-left"> 
+      <form method="post">
       {% if kanji_dict.known == false %}
-      <form method="post">
-        <div>Unknown <input type="submit" name="known" value="Mark as known"></div>
-      </form>
+        <div>Unknown <input type="submit" name="known" value="Known"></div>
       {% else %}
-      <form method="post">
-        <div>Known <input type="submit" name="unknown" value="Mark as unknown"></div>
+        <div>Known <input type="submit" name="unknown" value="Unknown"></div>
       </form>
       {% endif %}
     </div>
   </div>
 {% endblock %}
 {% block maincontent %}
-  <div class="row">
-    <div class="col-sm-12 text-left"> 
-      <h2>Vocabulary:</h2>
-    </div>
-  </div>
   <form method="post">
   <div class="row">
+    <div class="col-sm-12 text-left"> 
+      <h2>Vocabulary (in use):</h2>
+    </div>
+  </div>
+  <div class="row">
     {%- for vocab in vocab_list -%}
-    <div class="col-sm-2 text-left">
+      {%- if vocab.display == True -%}
+      <div class="col-sm-2 text-left">
+      {% if vocab.known == false %}
       <p>
-      {%- for each_kanji in vocab.literal -%}
-        {% set character_type = character_dict[each_kanji] %}
-        {%- if character_type == 0 -%}
-          <a href="{{ base_url }}{{ each_kanji }}" style="color:black">{{- each_kanji -}}</a>
-        {%- elif character_type == 1 -%}
-          <a href="{{ base_url }}{{ each_kanji }}" style="color:blue">{{- each_kanji -}}</a>
-        {%- elif character_type == -1 -%}
-          <span style="color:red">{{- each_kanji -}}</span>
-        {%- else -%}
-          {{- each_kanji -}}
-        {%- endif -%}
-      {%- endfor -%}
+      {% else %}
+      <p style="background-color: #ffdddd">
+      {% endif %}
+        {%- for each_kanji in vocab.literal -%}
+          {% set character_type = character_dict[each_kanji] %}
+          {%- if character_type == 0 -%}
+            <a href="{{ base_url }}{{ each_kanji }}" style="color:black">{{- each_kanji -}}</a>
+          {%- elif character_type == 1 -%}
+            <a href="{{ base_url }}{{ each_kanji }}" style="color:blue">{{- each_kanji -}}</a>
+          {%- elif character_type == -1 -%}
+            <span style="color:red">{{- each_kanji -}}</span>
+          {%- else -%}
+            {{- each_kanji -}}
+          {%- endif -%}
+        {%- endfor -%}
       </p>
-    </div>
-    <div class="col-sm-6 text-left">
-      <p>{{ vocab.reading }}</p>
-    </div>
-    <div class="col-sm-4 text-left">
-      <div class="checkbox">
-          <label><input type="checkbox" name="jimmy" value="{{ vocab.id }}"></label>
       </div>
-    </div>
+      <div class="col-sm-3 text-left">
+        <p id="readingsColumn_{{ vocab.id }}">{{ vocab.reading }}</p>
+      </div>
+      <div class="col-sm-6 text-left">
+        <p>{{ vocab.meanings }}</p>
+      </div>
+      <div class="col-sm-1 text-left">
+        <div class="checkbox">
+          <label><input type="checkbox" name="unhidden" value="{{ vocab.id }}" form="hideknow">Hide</label>
+          {% if vocab.known == false %}
+            <label><input type="checkbox" name="vocabnotknown" value="{{ vocab.id }}" form="hideknow">Known</label>
+          {% else %}
+            <label><input type="checkbox" name="vocabknown" value="{{ vocab.id }}" form="hideknow">Unknown</label>
+          {% endif %}
+        </div>
+      </div>
+      {%- endif -%}
     {% endfor %}
   </div>
-    <input type="submit" name="jimmy" value="Jimmy">
+  <div id="hiddenVocabRow" style="display:none">
+  <div class="row">
+    <div class="col-sm-12 text-left"> 
+      <h2>Vocabulary (hidden):</h2>
+    </div>
+  </div>
+  <div class="row">
+    {%- for vocab in vocab_list -%}
+      {%- if vocab.display == False -%}
+      <div class="col-sm-2 text-left">
+      {% if vocab.known == false %}
+      <p>
+      {% else %}
+      <p style="background-color: #ffdddd">
+      {% endif %}
+        {%- for each_kanji in vocab.literal -%}
+          {% set character_type = character_dict[each_kanji] %}
+          {%- if character_type == 0 -%}
+            <a href="{{ base_url }}{{ each_kanji }}" style="color:black">{{- each_kanji -}}</a>
+          {%- elif character_type == 1 -%}
+            <a href="{{ base_url }}{{ each_kanji }}" style="color:blue">{{- each_kanji -}}</a>
+          {%- elif character_type == -1 -%}
+            <span style="color:red">{{- each_kanji -}}</span>
+          {%- else -%}
+            {{- each_kanji -}}
+          {%- endif -%}
+        {%- endfor -%}
+      </p>
+      </div>
+      <div class="col-sm-3 text-left">
+        <p>{{ vocab.reading }}</p>
+      </div>
+      <div class="col-sm-6 text-left">
+        <p>{{ vocab.meanings }}</p>
+      </div>
+      <div class="col-sm-1 text-left">
+        <div class="checkbox">
+          <label><input type="checkbox" name="hidden" value="{{ vocab.id }}" form="hideknow">Unhide</label>
+          {% if vocab.known == false %}
+            <label><input type="checkbox" name="vocabnotknown" value="{{ vocab.id }}" form="hideknow">Known</label>
+          {% else %}
+            <label><input type="checkbox" name="vocabknown" value="{{ vocab.id }}" form="hideknow">Unknown</label>
+          {% endif %}
+        </div>
+      </div>
+      {%- endif -%}
+    {% endfor %}
+  </div>
+  </div>
   </form>
+<script>
+function showHidden(){
+  var toggleElement = document.getElementById("hiddenVocabRow");
+  toggleElement.style.display = toggleElement.style.display === "block" ? "none" : "block";
+}
+</script>
 {% endblock %}
+

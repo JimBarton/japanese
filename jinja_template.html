@@ -61,18 +61,19 @@
       </button>
       <a class="navbar-brand" href="/">Logo</a>
     </div>
-    <div class="collapse navbar-collapse" id="myNavbar">
-      <ul class="nav navbar-nav">
 {# Navigation block. Navigation bar status dependent on URL #}
 {% block navigation %}
+    <div class="collapse navbar-collapse" id="myNavbar">
+      <ul class="nav navbar-nav">
         <li class="inactive"><a href="/">Kanji Lookup</a></li>
+        <li class="inactive"><a href="/summary">Summary</a></li>
         <li class="inactive"><a href="/recreatedata">Recreate Data</a></li>
-{% endblock %}
       </ul>
       <ul class="nav navbar-nav navbar-right">
 <!--        <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li> -->
       </ul>
     </div>
+{% endblock %}
   </div>
 </nav>
 

@@ -5,6 +5,8 @@ import sys
 import os
 import re
 import MySQLdb
+#import lxml.etree
+from operator import itemgetter
 
 from google.appengine.api import app_identity
 import cloudstorage as gcs
@@ -57,7 +59,7 @@ class Jdatabase:
     """
     self.recreate_tables()
     self.parse_kanji_file()
-    self.parse_grammar_file()
+    #self.parse_grammar_file()
     self.parse_vocabulary_file()
     #self.create_kanjivocab()
   
@@ -68,16 +70,19 @@ class Jdatabase:
     sql_command_list.append('CREATE TABLE IF NOT EXISTS Kanji('\
       'id SMALLINT PRIMARY KEY AUTO_INCREMENT,'\
       'literal VARCHAR(1),'\
-      'grade VARCHAR(2),'\
-      'strokecount VARCHAR(2),'\
-      'frequency VARCHAR(4),'\
-      'jlpt CHAR(1),'\
-      'known BOOLEAN)')
+      'grade TINYINT,'\
+      'strokecount TINYINT,'\
+      'frequency SMALLINT,'\
+      'jlpt TINYINT,'\
+      'known BOOLEAN,'\
+      'display BOOLEAN)')
     sql_command_list.append('CREATE TABLE IF NOT EXISTS Vocabulary('\
       'id MEDIUMINT PRIMARY KEY AUTO_INCREMENT,'\
       'literal VARCHAR(255),'\
       'reading VARCHAR(255),'\
-      'known BOOLEAN)')
+      'meanings VARCHAR(2048),'\
+      'known BOOLEAN,'\
+      'display BOOLEAN)')
     sql_command_list.append('CREATE TABLE IF NOT EXISTS Grammar('\
       'id SMALLINT PRIMARY KEY AUTO_INCREMENT,'\
       'name VARCHAR(255),'\
@@ -105,10 +110,10 @@ class Jdatabase:
         read data to the database
         """
     kanji = {'literal':'',   
-             'grade': '',
-             'strokecount': '',
-             'frequency': '',
-             'jlpt': ''}
+             'grade': None,
+             'strokecount': None,
+             'frequency': None,
+             'jlpt': None}
  
     # read the kanjidic file
     with self.open_function(self.kanji_xmlfile) as kanji_file:
@@ -120,32 +125,32 @@ class Jdatabase:
           continue
         search = re.search(r'<grade>(\d+)</grade>', line)
         if search:
-          kanji['grade'] = search.group(1)
+          kanji['grade'] = int(search.group(1))
           continue
         search = re.search(r'<stroke_count>(\d+)</stroke_count>', line)
         if search:
-          kanji['strokecount'] = search.group(1)
+          kanji['strokecount'] = int(search.group(1))
           continue
         search = re.search(r'<freq>(\d+)</freq>', line)
         if search:
-          kanji['frequency'] = search.group(1)
+          kanji['frequency'] = int(search.group(1))
           continue
         search = re.search(r'<jlpt>(\d+)</jlpt>', line)
         if search:
-          kanji['jlpt'] = search.group(1)
+          kanji['jlpt'] = int(search.group(1))
           continue
         search = re.search(r'</character>', line)
         if search:
           # we have reached the end of one kanji tag
           # if this is a jouyou kanji, write out the current kanji to the database
-          if ('grade' in kanji and kanji['grade'] >= '1' and kanji['grade'] <= '8'):
+          if ('grade' in kanji and kanji['grade'] >= 1 and kanji['grade'] <= 8):
             self.insert_kanji(kanji)
           # reset the string variables for the next kanji
           kanji['literal'] = ''
-          kanji['grade'] = ''
-          kanji['strokecount'] = ''
-          kanji['frequency'] = ''
-          kanji['jlpt'] = ''
+          kanji['grade'] = None
+          kanji['strokecount'] = None
+          kanji['frequency'] = None
+          kanji['jlpt'] = None
 
   def parse_vocabulary_file(self):
     """ Parse the vocabulary XML file. Each entry is wrapped in an <entry> tag. We read line by line
@@ -155,10 +160,9 @@ class Jdatabase:
     """
     vocab = {'literal': '',
              'reading': '',
-             'meanings':''}
+             'meanings':[]}
     entry_list = []
     senses_list = []
-    vocab_char_list = []
     # read the vocab file
     with self.open_function(self.vocab_xmlfile) as vocab_file:
       # read each line in the vocab file and extract each vocab and its data based on tags
@@ -191,21 +195,26 @@ class Jdatabase:
                 # THIS IS TBD!!!
                 senses = re.findall(r'<sense>(.+)</sense>',entry_string, re.DOTALL)
                 for sense in senses:
-                  pos = re.search(r'<pos>(.+)</pos>',sense)
+                  pos = re.search(r'<pos>&(.+);</pos>',sense)
+                  if pos:
+                    last_pos = pos
+                  else:
+                    pos = last_pos
                   #print pos.group(1) + " -latest pos"
                   glosses = re.findall(r'<gloss>(.+)</gloss>',sense)
-                  senses_list.append((pos.group(1),glosses))
-                vocab['meanings'] = senses_list
+                  senses_list.append(pos.group(1) + '#' +', '.join(glosses) + ':')
 
                 # insert the retreived vocabulary entry into the database
+                vocab['meanings'] = '|'.join(senses_list)
                 self.insert_vocab(vocab)
+                #print vocab
 
               # clear the local vocab entry ready for the next one
+              senses_list = []
               entry_list = []
               vocab['literal'] = ''
               vocab['reading'] = ''
               vocab['meanings'] = []
-              vocab['char_list'] = []
               break
   
   def create_kanjivocab(self):
@@ -268,7 +277,7 @@ class Jdatabase:
       data = self.cursor.fetchone()
       if data:
         print data
-        kanji_dict['id'], kanji_dict['literal'], kanji_dict['grade'] ,kanji_dict['strokecount'], kanji_dict['frequency'], kanji_dict['jlpt'], kanji_dict['known'] = data
+        kanji_dict['id'], kanji_dict['literal'], kanji_dict['grade'] ,kanji_dict['strokecount'], kanji_dict['frequency'], kanji_dict['jlpt'], kanji_dict['known'], kanji_dict['display'] = data
       else:
         print "Kanji does not exist in the database"
     
@@ -293,15 +302,6 @@ class Jdatabase:
       print e
     else:
       vocab_tuple = self.cursor.fetchall()
-      # for each returned vocab, retrieve all its kanji one by one and create a list of the kanji and
-      # corresponding list of known flags. If the kanji is not in the database (it is not a jouyou kanji)
-      # then we can set the known flag to 'unknown'
-      # NB: this needs optimising to not retrieve kanji that have already appeared before which is especially
-      # true for the target kanji as this obviously appears in all the vocab and doesn't need to be retrieved
-      # multiple times
-      #print vocab_tuple
-      #character_list = set([a for x in vocab_tuple for a in x[1]])
-      #print character_list
       character_set = set([a for x in vocab_tuple for a in x[1]])
       for character in character_set:
         if re.search(kanji_regex, character, re.U): # if this is a kanji character
@@ -317,34 +317,33 @@ class Jdatabase:
           character_dict[character] = -2 # not a kanji (probably kana)
 
       for elem,vocab in enumerate(vocab_tuple):
-        print "vocab"
-        print vocab
         vocab_dict = {}
-        vocab_dict['id'], vocab_dict['literal'], vocab_dict['reading'], vocab_dict['known'] = vocab
-        print vocab_dict
+        vocab_dict['id'], vocab_dict['literal'], vocab_dict['reading'], vocab_dict['meanings'], vocab_dict['known'], vocab_dict['display'] = vocab
         vocab_list.append(vocab_dict)
-        print 'vocab_list'
-        print vocab_list
-      
-      
-      #for elem, vocab in enumerate(vocab_tuple):
-        #char_list = []
-        #known_list = []
-        #for character in vocab[1]:
-          #kanji = self.retrieve_kanji(character)
-          #if kanji:
-            #char_list.append(character)
-            #known_list.append(kanji['known'])
-          #else:
-            #char_list.append(character)
-            #known_list.append(0)
-        # append the vocab tuple, kanji list and known list to complex vocab list
-        #vocab_display_list.append([vocab,char_list,known_list])
 
-    print character_dict
-    print vocab_list
-    # return the complex list
+    # return the vocabulary and character information
     return vocab_list, character_dict
+
+  def retrieve_all_kanji(self):
+    """ Retrieve all kanji from the database.
+        We return a list of kanji dictionaries
+    """
+    kanji_dict = {}
+    kanji_list = []
+    sql_command = 'SELECT * FROM Kanji'
+    try:
+      self.cursor.execute(sql_command)
+    except MySQLdb.Error as e:
+      print e
+    else:
+      data = self.cursor.fetchall()
+      for kanji in data:
+        kanji_dict = {}
+        kanji_dict['id'], kanji_dict['literal'], kanji_dict['grade'] ,kanji_dict['strokecount'], kanji_dict['frequency'], kanji_dict['jlpt'], kanji_dict['known'], kanji_dict['display'] = kanji
+        kanji_list.append(kanji_dict)
+    
+    #sorted_kanji_list = sorted(kanji_list, key=itemgetter('strokecount'), reverse=True)
+    return kanji_list
 
   def retrieve_status(self):
     """ Retrieves the number of entries in each table and returns this as as dictionary """
@@ -361,7 +360,7 @@ class Jdatabase:
     """ Inserts a new kanji into the database using a kanji dictionary as input. Always marked as
         unknown in the first instance
     """
-    sql_command = 'INSERT INTO Kanji(literal, grade, strokecount, frequency, jlpt, known)VALUES(%s,%s,%s,%s,%s,FALSE)'
+    sql_command = 'INSERT INTO Kanji(literal, grade, strokecount, frequency, jlpt, known, display)VALUES(%s,%s,%s,%s,%s,FALSE,TRUE)'
     try:
       self.cursor.execute(sql_command, (kanji['literal'], kanji['grade'], kanji['strokecount'], kanji['frequency'], kanji['jlpt']))
     except MySQLdb.Error as e:
@@ -372,11 +371,13 @@ class Jdatabase:
   def insert_vocab(self, vocab):
     """ Inserts a new vocabulary entry into the database using a vocab dictionary as input
     """
-    sql_command = 'INSERT INTO Vocabulary(literal, reading, known)VALUES(%s,%s,FALSE)'
+    sql_command = 'INSERT INTO Vocabulary(literal, reading, meanings, known, display)VALUES(%s,%s,%s,FALSE,TRUE)'
+    #print sql_command
     try:
-      self.cursor.execute(sql_command, (vocab['literal'], vocab['reading']))
+      self.cursor.execute(sql_command, (vocab['literal'], vocab['reading'], vocab['meanings']))
     except MySQLdb.Error as e:
       print e
+      print vocab['meanings']
     else:
       self.conn.commit()
 
@@ -398,11 +399,31 @@ class Jdatabase:
           print 'Duplicate resolved as', new_name
           self.conn.commit()
 
-  def update_known_status(self, kanji):
+  def update_kanji_known_status(self, kanji):
     """ Update the 'known' status of a kanji using a kanji dictionary as input """
     sql_command = 'UPDATE Kanji SET known=(%s) WHERE id=(%s)'
     try:
       self.cursor.execute(sql_command, (kanji['known'], kanji['id']))
+    except MySQLdb.Error as e:
+      print e
+    else:
+      self.conn.commit()
+
+  def update_vocab_display_status(self, vocab):
+    """ Update the 'display' status of a vocab entry using a vocab dictionary as input """
+    sql_command = 'UPDATE Vocabulary SET display=(%s) WHERE id=(%s)'
+    try:
+      self.cursor.execute(sql_command, (vocab['display'], vocab['id']))
+    except MySQLdb.Error as e:
+      print e
+    else:
+      self.conn.commit()
+
+  def update_vocab_known_status(self, vocab):
+    """ Update the 'known' status of a vocab entry using a vocab dictionary as input """
+    sql_command = 'UPDATE Vocabulary SET known=(%s) WHERE id=(%s)'
+    try:
+      self.cursor.execute(sql_command, (vocab['known'], vocab['id']))
     except MySQLdb.Error as e:
       print e
     else:
