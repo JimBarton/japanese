@@ -324,15 +324,38 @@ class Jdatabase:
     # return the vocabulary and character information
     return vocab_list, character_dict
 
-  def retrieve_all_kanji(self):
-    """ Retrieve all kanji from the database.
+  def retrieve_many_kanji(self, filter):
+    """ Retrieve many kanji from the database.
         We return a list of kanji dictionaries
     """
     kanji_dict = {}
     kanji_list = []
-    sql_command = 'SELECT * FROM Kanji'
+    sql_command = 'SELECT * FROM Kanji '\
+      'WHERE (strokecount BETWEEN (%s) AND (%s))'\
+      'AND (grade BETWEEN (%s) AND (%s))'
+
+    if filter['no_freq'] == False:
+      sql_command += 'AND (frequency BETWEEN (%s) AND (%s))'
+    else:
+      sql_command += 'AND (frequency BETWEEN (%s) AND (%s) OR (frequency IS NULL))'
+
+    if filter['no_jlpt'] == False:
+      sql_command += 'AND (jlpt BETWEEN (%s) AND (%s))'
+    else:
+      sql_command += 'AND (jlpt BETWEEN (%s) AND (%s)) OR (jlpt IS NULL)'
+
+    if filter['known_flag'] == 'true':
+      known_flag = True
+      sql_command += 'AND (known = True)'
+    elif filter['known_flag'] == 'false':
+      known_flag = False
+      sql_command += 'AND (known = False)'
+    else:
+      known_flag = 'true'
+      sql_command += 'AND (known = True OR known = False)'
+    
     try:
-      self.cursor.execute(sql_command)
+      self.cursor.execute(sql_command, (filter['min_stroke'], filter['max_stroke'], filter['min_grade'], filter['max_grade'], filter['min_freq'], filter['max_freq'], filter['min_jlpt'], filter['max_jlpt']))
     except MySQLdb.Error as e:
       print e
     else:

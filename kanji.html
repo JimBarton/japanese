@@ -1,6 +1,21 @@
 {% extends "jinja_template.html" %}
 
+{% block navigation %}
+    <div class="collapse navbar-collapse" id="myNavbar">
+      <ul class="nav navbar-nav">
+        <li class="active"><a href="/">Kanji Lookup</a></li>
+        <li class="inactive"><a href="/summary">Summary</a></li>
+        <li class="inactive"><a href="/recreatedata">Recreate Data</a></li>
+      </ul>
+    </div>
+{% endblock %}
+
 {% block subtitle %}
+  <div class="row">
+    <div class="col-sm-12 text-left"> 
+      <h2>Kanji Lookup</h2>
+    </div>
+  </div>
   <div class="row">
     <div class="col-sm-8 text-left" style="padding-top:20px">
       <form method="post">
@@ -17,7 +32,7 @@
   </div>
   <div class="row">
     <div class="col-sm-12 text-left"> 
-      <h2>Kanji: {% if kanji_dict.known == true %} <span style="color:blue">{{ kanji_dict.literal }}</span> {% else %} {{ kanji_dict.literal }}　{% endif %}</h2>
+      <h3>Kanji: {% if kanji_dict.known == true %} <span style="color:blue">{{ kanji_dict.literal }}</span> {% else %} {{ kanji_dict.literal }}　{% endif %}</h3>
     </div>
   </div>
   <div class="row">
@@ -48,7 +63,7 @@
   <form method="post">
   <div class="row">
     <div class="col-sm-12 text-left"> 
-      <h2>Vocabulary (in use):</h2>
+      <h3>Vocabulary (in use):</h3>
     </div>
   </div>
   <div class="row">
@@ -96,7 +111,7 @@
   <div id="hiddenVocabRow" style="display:none">
   <div class="row">
     <div class="col-sm-12 text-left"> 
-      <h2>Vocabulary (hidden):</h2>
+      <h3>Vocabulary (hidden):</h3>
     </div>
   </div>
   <div class="row">

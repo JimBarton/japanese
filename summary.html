@@ -11,50 +11,164 @@
 {% endblock %}
 
 {% block subtitle %}
-  <div class="row">
-    <div class="col-sm-8 text-left" style="padding-top:20px">
-        <p>Order by:</p>
-        <select name="displayorder" id="displayorder">
-          <option value="strokecount">Strokecount</option>
-          <option value="frequency">Frequency</option>
-          <option value="grade">Grade</option>
-          <option value="jlpt">JLPT</option>
-        </select>
-        <button onClick="displayData()">Go</button>
-    </div>
-  </div>
+<form method="get" id="userSettings">
   <div class="row">
     <div class="col-sm-12 text-left"> 
       <h2>Kanji Summary</h2>
     </div>
   </div>
+  <div class="row">
+    <div class="col-sm-1 text-left" style="padding-top:20px">
+        <label>Order by:</label>
+        <select name="displayOrder" id="displayOrder">
+          {% if display_order is not defined or display_order == 'strokecount' %}
+          <option value="strokecount" selected>Strokecount</option>
+          {% else %}
+          <option value="strokecount">Strokecount</option>
+          {% endif %}
+          {% if display_order == 'frequency' %}
+          <option value="frequency" selected>Frequency</option>
+          {% else %}
+          <option value="frequency">Frequency</option>
+          {% endif %}
+          {% if display_order == 'grade' %}
+          <option value="grade" selected>Grade</option>
+          {% else %}
+          <option value="grade">Grade</option>
+          {% endif %}
+          {% if display_order == 'jlpt' %}
+          <option value="jlpt" selected>JLPT</option>
+          {% else %}
+          <option value="jlpt">JLPT</option>
+          {% endif %}
+        </select>
+    </div>
+    <div class="col-sm-1 text-left" style="padding-top:20px">
+      <div id="strokeMinSlider">
+        <label for="strokeMinInput">Stroke Min</label><input style="width:100px" name="strokeMinInput" id="strokeMinInput" type="range" min="0" max="23" step="1" value={{ min_stroke|default(0) }} oninput="updateSliderMin(this, document.getElementById('strokeMaxInput'), document.getElementById('strokeMinOutput'))">
+        <output name="strokeMinOutput" id="strokeMinOutput">{{ min_stroke|default(0) }}</output>
+      </div>
+    </div>
+    <div class="col-sm-1 text-left" style="padding-top:20px">
+      <div id="strokeMaxSlider">
+        <label for="strokeMaxInput">Max</label><input style="width:100px" name="strokeMaxInput" id="strokeMaxInput" type="range" min="0" max="23" step="1" value={{ max_stroke|default(23) }} oninput="updateSliderMax(this, document.getElementById('strokeMinInput'), document.getElementById('strokeMaxOutput'))">
+        <output name="strokeMaxOutput" id="strokeMaxOutput">{{ max_stroke|default(23) }}</output>
+      </div>
+    </div>
+    <div class="col-sm-1 text-left" style="padding-top:20px">
+      <div id="freqMinSlider">
+        <label for="freqMinInput">Freq Min</label><input style="width:100px" name="freqMinInput" id="freqMinInput" type="range" min="0" max="2300" step="20" value={{ min_freq|default(0) }} oninput="updateSliderMin(this, document.getElementById('freqMaxInput'), document.getElementById('freqMinOutput'))">
+        <output name="freqMinOutput" id="freqMinOutput">{{ min_freq|default(0) }}</output>
+      </div>
+      <div class="checkbox">
+        {% if no_freq == true %}
+        <label><input type="checkbox" name="noFreq" value="noFreq" checked>Include null</label>
+        {% else %}
+        <label><input type="checkbox" name="noFreq" value="noFreq">Include null</label>
+        {% endif %}
+      </div>
+    </div>
+    <div class="col-sm-1 text-left" style="padding-top:20px">
+      <div id="freqMaxSlider">
+        <label for="freqMaxInput">Max</label><input style="width:100px" name="freqMaxInput" id="freqMaxInput" type="range" min="0" max="2300" step="20" value={{ max_freq|default(2300) }} oninput="updateSliderMax(this, document.getElementById('freqMinInput'), document.getElementById('freqMaxOutput'))">
+        <output name="freqMaxOutput" id="freqMaxOutput">{{ max_freq|default(2300) }}</output>
+      </div>
+    </div>
+    <div class="col-sm-1 text-left" style="padding-top:20px">
+      <div id="gradeMinSlider">
+        <label for="gradeMinInput">Grade Min</label><input style="width:100px" name="gradeMinInput" id="gradeMinInput" type="range" min="1" max="8" step="1" value={{ min_grade|default(1) }} oninput="updateSliderMin(this, document.getElementById('gradeMaxInput'), document.getElementById('gradeMinOutput'))">
+        <output name="gradeMinOutput" id="gradeMinOutput">{{ min_grade|default(1) }}</output>
+      </div>
+    </div>
+    <div class="col-sm-1 text-left" style="padding-top:20px">
+      <div id="gradeMaxSlider">
+        <label for="gradeMaxInput">Max</label><input style="width:100px" name="gradeMaxInput" id="gradeMaxInput" type="range" min="1" max="8" step="1" value={{ max_grade|default(8) }} oninput="updateSliderMax(this, document.getElementById('gradeMinInput'), document.getElementById('gradeMaxOutput'))">
+        <output name="gradeMaxOutput" id="gradeMaxOutput">{{ max_grade|default(8) }}</output>
+      </div>
+    </div>
+    <div class="col-sm-1 text-left" style="padding-top:20px">
+      <div id="jlptMinSlider">
+        <label for="jlptMinInput">JLPT Min</label><input style="width:100px" name="jlptMinInput" n="jlptMinInput" type="range" min="1" max="4" step="1" value={{ min_jlpt|default(1) }} oninput="updateSliderMin(this, document.getElementById('jlptMaxInput'), document.getElementById('jlptMinOutput'))">
+        <output name="jlptMinOutput" id="jlptMinOutput">{{ min_jlpt|default(1) }}</output>
+      </div>
+      <div class="checkbox">
+        {% if no_jlpt == true %}
+        <label><input type="checkbox" name="noJlpt" value="noJlpt" checked>Include null</label>
+        {% else %}
+        <label><input type="checkbox" name="noJlpt" value="noJlpt">Include null</label>
+        {% endif %}
+      </div>
+    </div>
+    <div class="col-sm-1 text-left" style="padding-top:20px">
+      <div id="jlptMaxSlider">
+        <label for="jlptMaxInput">Max</label><input style="width:100px" name="jlptMaxInput" id="jlptMaxInput" type="range" min="1" max="4" step="1" value={{ max_jlpt|default(4) }} oninput="updateSliderMax(this, document.getElementById('jlptMinInput'), document.getElementById('jlptMaxOutput'))">
+        <output name="jlptMaxOutput" id="jlptMaxOutput">{{ max_jlpt|default(4) }}</output>
+      </div>
+    </div>
+    <div class="col-sm-2 text-left" style="padding-top:20px">
+        <label>Include:</label>
+        <select name="knownFlag" id="knownFlag">
+          {% if known_flag == 'true' %}
+          <option value="true" selected>Known</option>
+          {% else %}
+          <option value="true">Known</option>
+          {% endif %}
+          {% if known_flag == 'false' %}
+          <option value="false" selected>Unknown</option>
+          {% else %}
+          <option value="false">Unknown</option>
+          {% endif %}
+          {% if known_flag is not defined or known_flag == 'both' %}
+          <option value="both" selected>Both</option>
+          {% else %}
+          <option value="both">Both</option>
+          {% endif %}
+        </select>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-2 text-left" style="padding-top:20px">
+          <input type="submit" value="Go">
+    </div>
+  </div>
+</form>
 {% endblock %}
 
 {% block maincontent %}
-  <div id="hiddenFreq" style="display:none">
+{% if kanji_list %}
   <div class="row">
     <div class="col-sm-12 text-left"> 
-      <h2>By JLPT:</h2>
+      <h2>By {{display_order}}:</h2>
     </div>
   </div>
   <div class="row">
     <div class="col-sm-12 text-left">
       <p>
-      {%- for kanji in kanji_list|sort(attribute='jlpt') -%}
+      {%- for kanji in kanji_list|sort(attribute=display_order) -%}
         {% if kanji.known == true %}
-        <a href="{{ base_url }}{{ kanji.literal }}" style="color:blue">{{- kanji.literal -}}</a>
+        <a href="{{ base_url }}{{ kanji.literal }}" style="color:blue; font-size:20px">{{- kanji.literal -}}</a>
         {% else %}
-        <a href="{{ base_url }}{{ kanji.literal }}" style="color:black">{{- kanji.literal -}}</a>
+        <a href="{{ base_url }}{{ kanji.literal }}" style="color:black; font-size:20px">{{- kanji.literal -}}</a>
         {% endif %}
       {%- endfor -%}
       </p>
     </div>
   </div>
-  </div>
+{% endif %}
 <script>
 function displayData(){
-  var toggleElement = document.getElementById("displayorder");
-  toggleElement.style.display = toggleElement.style.display === "block" ? "none" : "block";
+  var freqElement = document.getElementById("hiddenFreq");
+  var displayElement = document.getElementById("displayOrder");
+  freqElement.style.display = freqElement.style.display === "block" ? "none" : "block";  
+  displayElement.style.display = displayElement.style.display === "block" ? "none" : "block";  
+}
+function updateSliderMin(minInput, maxInput, minOutput){
+	minInput.value=Math.min(minInput.value,maxInput.value);
+	minOutput.value = minInput.value;
+}
+function updateSliderMax(maxInput, minInput, maxOutput){
+	maxInput.value=Math.max(maxInput.value,minInput.value);
+	maxOutput.value = maxInput.value;
 }
 </script>
 

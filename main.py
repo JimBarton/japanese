@@ -117,14 +117,37 @@ class KanjiSummary(webapp2.RequestHandler):
   
   def get(self):
     """ Read all kanji and display them """
-    self.current_data['kanji_list'] = db.retrieve_all_kanji()
+    logging.info(self.request.query_string)
+    if self.request.get("displayOrder"):
+      self.current_data['display_order'] = self.request.get("displayOrder")
+      self.current_data['min_stroke'] = self.request.get("strokeMinInput")
+      self.current_data['max_stroke'] = self.request.get("strokeMaxInput")
+      self.current_data['min_freq'] = self.request.get("freqMinInput")
+      self.current_data['max_freq'] = self.request.get("freqMaxInput")
+      if self.request.get("noFreq"):
+        self.current_data['no_freq'] = True
+      else:
+        self.current_data['no_freq'] = False
+      self.current_data['min_grade'] = self.request.get("gradeMinInput")
+      self.current_data['max_grade'] = self.request.get("gradeMaxInput")
+      self.current_data['min_jlpt'] = self.request.get("jlptMinInput")
+      self.current_data['max_jlpt'] = self.request.get("jlptMaxInput")
+      if self.request.get("noJlpt"):
+        self.current_data['no_jlpt'] = True
+      else:
+        self.current_data['no_jlpt'] = False
+      self.current_data['known_flag'] = self.request.get("knownFlag")
+      
+      self.current_data['kanji_list'] = db.retrieve_many_kanji(self.current_data)
+      logging.info(self.current_data['kanji_list'])
+     
     self.response.write(self.template.render(self.current_data))
 
   def post(self):
     """ Read user inputs and display kanji accordingly """
     logging.info(self.request.POST)
-    self.current_data['display_order'] = cgi.escape(self.request.get('displayby'))
-    self.current_data['kanji_list'] = db.retrieve_all_kanji()
+    #self.current_data['display_order'] = cgi.escape(self.request.get('displayby'))
+    #self.current_data['kanji_list'] = db.retrieve_all_kanji()
     
     self.response.write(self.template.render(self.current_data))
 
