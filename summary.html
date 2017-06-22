@@ -1,4 +1,6 @@
 {% extends "jinja_template.html" %}
+{% set display_step = 0 %}
+{% set display_round = 0 %}
 
 {% block navigation %}
     <div class="collapse navbar-collapse" id="myNavbar">
@@ -45,19 +47,19 @@
     </div>
     <div class="col-sm-1 text-left" style="padding-top:20px">
       <div id="strokeMinSlider">
-        <label for="strokeMinInput">Stroke Min</label><input style="width:100px" name="strokeMinInput" id="strokeMinInput" type="range" min="0" max="23" step="1" value={{ min_stroke|default(0) }} oninput="updateSliderMin(this, document.getElementById('strokeMaxInput'), document.getElementById('strokeMinOutput'))">
+        <label for="strokeMinInput">Stroke Min</label><input style="width:100px" name="strokeMinInput" id="strokeMinInput" type="range" min="0" max="29" step="1" value={{ min_stroke|default(0) }} oninput="updateSliderMin(this, document.getElementById('strokeMaxInput'), document.getElementById('strokeMinOutput'))">
         <output name="strokeMinOutput" id="strokeMinOutput">{{ min_stroke|default(0) }}</output>
       </div>
     </div>
     <div class="col-sm-1 text-left" style="padding-top:20px">
       <div id="strokeMaxSlider">
-        <label for="strokeMaxInput">Max</label><input style="width:100px" name="strokeMaxInput" id="strokeMaxInput" type="range" min="0" max="23" step="1" value={{ max_stroke|default(23) }} oninput="updateSliderMax(this, document.getElementById('strokeMinInput'), document.getElementById('strokeMaxOutput'))">
-        <output name="strokeMaxOutput" id="strokeMaxOutput">{{ max_stroke|default(23) }}</output>
+        <label for="strokeMaxInput">Max</label><input style="width:100px" name="strokeMaxInput" id="strokeMaxInput" type="range" min="0" max="29" step="1" value={{ max_stroke|default(29) }} oninput="updateSliderMax(this, document.getElementById('strokeMinInput'), document.getElementById('strokeMaxOutput'))">
+        <output name="strokeMaxOutput" id="strokeMaxOutput">{{ max_stroke|default(29) }}</output>
       </div>
     </div>
     <div class="col-sm-1 text-left" style="padding-top:20px">
       <div id="freqMinSlider">
-        <label for="freqMinInput">Freq Min</label><input style="width:100px" name="freqMinInput" id="freqMinInput" type="range" min="0" max="2300" step="20" value={{ min_freq|default(0) }} oninput="updateSliderMin(this, document.getElementById('freqMaxInput'), document.getElementById('freqMinOutput'))">
+        <label for="freqMinInput">Freq Min</label><input style="width:100px" name="freqMinInput" id="freqMinInput" type="range" min="0" max="2500" step="100" value={{ min_freq|default(0) }} oninput="updateSliderMin(this, document.getElementById('freqMaxInput'), document.getElementById('freqMinOutput'))">
         <output name="freqMinOutput" id="freqMinOutput">{{ min_freq|default(0) }}</output>
       </div>
       <div class="checkbox">
@@ -70,8 +72,8 @@
     </div>
     <div class="col-sm-1 text-left" style="padding-top:20px">
       <div id="freqMaxSlider">
-        <label for="freqMaxInput">Max</label><input style="width:100px" name="freqMaxInput" id="freqMaxInput" type="range" min="0" max="2300" step="20" value={{ max_freq|default(2300) }} oninput="updateSliderMax(this, document.getElementById('freqMinInput'), document.getElementById('freqMaxOutput'))">
-        <output name="freqMaxOutput" id="freqMaxOutput">{{ max_freq|default(2300) }}</output>
+        <label for="freqMaxInput">Max</label><input style="width:100px" name="freqMaxInput" id="freqMaxInput" type="range" min="0" max="2500" step="100" value={{ max_freq|default(2500) }} oninput="updateSliderMax(this, document.getElementById('freqMinInput'), document.getElementById('freqMaxOutput'))">
+        <output name="freqMaxOutput" id="freqMaxOutput">{{ max_freq|default(2500) }}</output>
       </div>
     </div>
     <div class="col-sm-1 text-left" style="padding-top:20px">
@@ -106,7 +108,7 @@
       </div>
     </div>
     <div class="col-sm-2 text-left" style="padding-top:20px">
-        <label>Include:</label>
+        <label>Known status:</label>
         <select name="knownFlag" id="knownFlag">
           {% if known_flag == 'true' %}
           <option value="true" selected>Known</option>
@@ -137,14 +139,20 @@
 {% block maincontent %}
 {% if kanji_list %}
   <div class="row">
-    <div class="col-sm-12 text-left"> 
-      <h2>By {{display_order}}:</h2>
-    </div>
-  </div>
-  <div class="row">
     <div class="col-sm-12 text-left">
       <p>
+      {% if display_order == 'frequency' %}
+      {% set display_step = 99 %}
+      {% set display_round = -2 %}
+      {% endif %}
       {%- for kanji in kanji_list|sort(attribute=display_order) -%}
+        {% if kanji[display_order] == none and subset is not defined %}
+          {% set subset = -display_step %}
+          <h3>{{ display_order|title }} NULL</h3>
+        {% elif subset is not defined or kanji[display_order] > subset+display_step %}
+          {% set subset = kanji[display_order]|round(display_round,'floor')|int %}
+          <h3>{{ display_order|title }} {{ subset }}</h3>
+        {% endif %}
         {% if kanji.known == true %}
         <a href="{{ base_url }}{{ kanji.literal }}" style="color:blue; font-size:20px">{{- kanji.literal -}}</a>
         {% else %}

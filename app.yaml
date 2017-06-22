@@ -17,6 +17,16 @@ libraries:
 - name: jinja2
   version: latest
 
+skip_files:
+- ^(.*/)?#.*#$
+- ^(.*/)?.*~$
+- ^(.*/)?.*\.py[co]$
+- ^(.*/)?.*/RCS/.*$
+- ^(.*/)?\..*$
+- ^(.*/)?\.xml$
+- ^(.*/)?\.txt$
+- .+\.xml
+
 # [START env_variables]
 env_variables:
     CLOUDSQL_CONNECTION_NAME: japanese2-166714:europe-west1:japanese

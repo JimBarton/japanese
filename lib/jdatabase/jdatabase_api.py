@@ -27,7 +27,7 @@ class Jdatabase:
         After finding the correct bucket we set names for the 3 files we need to parse
     """
     if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/'):
-      cloudsql_unix_socket = os.path.join('/cloudsql', _connection_name)
+      cloudsql_unix_socket = os.path.join('/cloudsql', self._connection_name)
       self.conn = MySQLdb.connect(unix_socket=cloudsql_unix_socket, user=self._user, passwd=self._password, db=self._database, charset=self._charset)
     
     else:
@@ -39,7 +39,7 @@ class Jdatabase:
     # otherwise read from local file (can't get the stubs to work at the moment)
     if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/'):
       self.bucket_name = os.environ.get('BUCKET_NAME', app_identity.get_default_gcs_bucket_name())
-      self.bucket = '/' + bucket_name
+      self.bucket = '/' + self.bucket_name
       self.open_function = gcs.open
     else:
       self.bucket = '.'
@@ -293,14 +293,17 @@ class Jdatabase:
     character_dict = {}
     vocab_list = []
     kanji_regex = u'[\u4E00-\u9FBF]+' # unicode range for kanji
+    where_clause = "%" + character + "%"
     
     # retrieve the vocab for this kanji
-    sql_command = 'SELECT * FROM Vocabulary WHERE literal LIKE (%s)'   
+    sql_command = "SELECT * FROM Vocabulary WHERE literal LIKE %s"   
     try:
-      self.cursor.execute(sql_command, ("%" + character + "%"))
+      #self.cursor.execute(sql_command, ("%" + character + "%"))
+      self.cursor.execute(sql_command, ([where_clause]))
     except MySQLdb.Error as e:
       print e
     else:
+      print self.cursor._last_executed
       vocab_tuple = self.cursor.fetchall()
       character_set = set([a for x in vocab_tuple for a in x[1]])
       for character in character_set:
@@ -342,7 +345,7 @@ class Jdatabase:
     if filter['no_jlpt'] == False:
       sql_command += 'AND (jlpt BETWEEN (%s) AND (%s))'
     else:
-      sql_command += 'AND (jlpt BETWEEN (%s) AND (%s)) OR (jlpt IS NULL)'
+      sql_command += 'AND (jlpt BETWEEN (%s) AND (%s) OR (jlpt IS NULL))'
 
     if filter['known_flag'] == 'true':
       known_flag = True
