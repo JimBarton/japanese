@@ -285,10 +285,10 @@ class Jdatabase:
 
   def retrieve_kanji_vocab(self, character):
     """ Retrieves all vocabulary containing a given kanji character, passed as argument.
-        We return a list of the vocab lists with each vocab list having the following form:
-        (tuple of the vocab entry in the database)[list of kanji in the vocab][list of known flags for the kanji]
-        E.g. (5949, u'\u6d77\u85fb', u'\u304b\u3044\u305d\u3046', 0), [u'\u6d77', u'\u85fb'], [1, 0]
-             (vocab id, vocab literal, vocab in kana, vocabulary known flag), [list of kanji in vocab], [known flags for the kanji]]
+        We return:
+        - A dictionary of all kanji characters which apear in the vocabulary list along with their "known"
+        status from the KANJI table
+        - A list of vocabulary dictionaries for each vocab entry
     """
     character_dict = {}
     vocab_list = []
