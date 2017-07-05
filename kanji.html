@@ -1,13 +1,9 @@
 {% extends "jinja_template.html" %}
 
 {% block navigation %}
-    <div class="collapse navbar-collapse" id="myNavbar">
-      <ul class="nav navbar-nav">
         <li class="active"><a href="/">Kanji Lookup</a></li>
         <li class="inactive"><a href="/summary">Summary</a></li>
         <li class="inactive"><a href="/recreatedata">Recreate Data</a></li>
-      </ul>
-    </div>
 {% endblock %}
 
 {% block subtitle %}
@@ -20,13 +16,13 @@
     <div class="col-sm-8 text-left" style="padding-top:20px">
       <form method="post">
         <input type="text" name="lookup" maxlength="1" placeholder="Enter single kanji to retrieve">
-        <input type="submit" value="Retrieve">
+        <input class="btn btn-primary btn-sm" type="submit" value="Retrieve">
       </form>
     </div>
     <div class="col-sm-4 text-left" style="padding-top:20px">
-        <input type="button" name="showhidden" value="Shown/hide hidden vocab" onClick="showHidden()">
+        <input class="btn btn-primary btn-sm" type="button" name="showhidden" value="Shown/hide hidden vocab" onClick="showHidden()">
         <form method="post" id="hideknow">
-          <input type="submit" name="vocabupdatelist" value="Update vocab" form="hideknow">
+          <input class="btn btn-primary btn-sm" type="submit" name="vocabupdatelist" value="Update vocab" form="hideknow">
         </form>
     </div>
   </div>
@@ -51,9 +47,9 @@
     <div class="col-sm-4 text-left"> 
       <form method="post">
       {% if kanji_dict.known == false %}
-        <p>Unknown <input type="submit" name="known" value="Known"></p>
+        <p>Unknown <input class="btn btn-primary btn-sm" type="submit" name="known" value="Known"></p>
       {% else %}
-        <p>Known <input type="submit" name="unknown" value="Unknown"></p>
+        <p>Known <input class="btn btn-primary btn-sm" type="submit" name="unknown" value="Unknown"></p>
       </form>
       {% endif %}
     </div>

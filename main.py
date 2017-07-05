@@ -13,6 +13,7 @@ import webapp2
 import jinja2
 
 from google.appengine.api import memcache
+from google.appengine.api import users
 import jdatabase
 
 # set up our jinja environment
@@ -28,6 +29,20 @@ db = jdatabase.Jdatabase()
 current_data = {}
 current_data['base_url'] = r'kanji?character='
 
+def get_user():
+  data_dict = {}
+  data_dict['user'] = users.get_current_user()
+  if data_dict['user']:
+    data_dict['nickname'] = data_dict['user'].nickname()
+    data_dict['logout_url'] = users.create_logout_url('/')
+    data_dict['greeting'] = 'Welcome, {}! (<a href="{}">sign out</a>)'.format(
+              data_dict['nickname'], data_dict['logout_url'])
+  else:
+    data_dict['login_url'] = users.create_login_url('/')
+    data_dict['greeting'] = '<a href="{}">Sign in</a>'.format(data_dict['login_url'])
+
+  return data_dict
+
 class MainPage(webapp2.RequestHandler):
   """ Class for the main page which is actually currently the kanji lookup page with no
       currently selected kanji
@@ -38,6 +53,8 @@ class MainPage(webapp2.RequestHandler):
   def get(self):
     """ Render a the lookup page with no selected kanji, requesting input from user """
     self.response.write(self.template.render())
+    current_data['user_dict'] = get_user()
+    self.response.write(self.template.render(current_data))
 
   def post(self):
     """ Retrieve the kanji character input by the user and redirect to the lookup
@@ -53,6 +70,7 @@ class KanjiLookup(webapp2.RequestHandler):
   
   def get(self):
     """ Get the current kanji and render it """
+    current_data['user_dict'] = get_user()
     kanji_literal = self.request.get('character')
     logging.info(kanji_literal)
     
@@ -113,6 +131,7 @@ class KanjiSummary(webapp2.RequestHandler):
   """ Display all jouyou kanji on summary page """
   template = JINJA_ENVIRONMENT.get_template('summary.html')
   current_data['display_order'] = None
+  current_data['user_dict'] = get_user()
   
   def get(self):
     """ Read all kanji and display them """
@@ -146,7 +165,6 @@ class KanjiSummary(webapp2.RequestHandler):
     """ Read user inputs and display kanji accordingly """
     logging.info(self.request.POST)    
     self.response.write(self.template.render(current_data))
-
 
 class RecreateData(webapp2.RequestHandler):
   """ Class for displaying database stats and option to recreate the database from scratch.
