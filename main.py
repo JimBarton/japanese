@@ -51,7 +51,7 @@ class MainPage(webapp2.RequestHandler):
   print "recreation main"
 
   def get(self):
-    """ Render the lookup page with no selected kanji, requesting input from user """
+    """ Render a the lookup page with no selected kanji, requesting input from user """
     self.response.write(self.template.render())
     current_data['user_dict'] = get_user()
     self.response.write(self.template.render(current_data))
