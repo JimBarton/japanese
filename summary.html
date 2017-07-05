@@ -3,13 +3,9 @@
 {% set display_round = 0 %}
 
 {% block navigation %}
-    <div class="collapse navbar-collapse" id="myNavbar">
-      <ul class="nav navbar-nav">
         <li class="inactive"><a href="/">Kanji Lookup</a></li>
         <li class="active"><a href="/summary">Summary</a></li>
         <li class="inactive"><a href="/recreatedata">Recreate Data</a></li>
-      </ul>
-    </div>
 {% endblock %}
 
 {% block subtitle %}
@@ -108,7 +104,7 @@
       </div>
     </div>
     <div class="col-sm-2 text-left" style="padding-top:20px">
-        <label>Known status:</label>
+        <label >Known status:</label>
         <select name="knownFlag" id="knownFlag">
           {% if known_flag == 'true' %}
           <option value="true" selected>Known</option>
@@ -130,7 +126,7 @@
   </div>
   <div class="row">
     <div class="col-sm-2 text-left" style="padding-top:20px">
-          <input type="submit" value="Go">
+          <input class="btn btn-primary btn-sm" type="submit" value="Go">
     </div>
   </div>
 </form>
