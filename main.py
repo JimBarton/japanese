@@ -48,9 +48,11 @@ class MainPage(webapp2.RequestHandler):
       currently selected kanji
   """
   template = JINJA_ENVIRONMENT.get_template('index.html')
+  print "recreation main"
 
   def get(self):
-    """ Render a the lookup page with no selected kanji, requesting input from user """
+    """ Render the lookup page with no selected kanji, requesting input from user """
+    self.response.write(self.template.render())
     current_data['user_dict'] = get_user()
     self.response.write(self.template.render(current_data))
 
