@@ -1,9 +1,10 @@
 {% extends "jinja_template.html" %}
 
 {% block navigation %}
+        <li class="inactive"><a href="/">Summary</a></li>
         <li class="inactive"><a href="/">Kanji Lookup</a></li>
-        <li class="inactive"><a href="/summary">Summary</a></li>
-        <li class="active"><a href="/recreatedata">Recreate Database</a></li>
+        <li class="inactive"><a href="/summary">Kanji List</a></li>
+        <li class="active"><a href="/recreatedata">Recreate Data</a></li>
 {% endblock %}
 
 {% block subtitle %}
@@ -19,17 +20,15 @@
     <div class="col-sm-12 text-left"> 
       {% if flag == true %}
         <p>All database tables and data succesfully recreated</p>
-        <p>Number of kanji: {{ Kanji }}</p>
-        <p>Number of vocabulary: {{ Vocabulary }}</p>
-        <p>Number of grammar terms: {{ Grammar }}</p>
-        <p>Number of kanji/vocab cross-references: {{ KanjiVocabulary }}</p>
+        <p>Number of kanji: {{ status.Kanji }}</p>
+        <p>Number of vocabulary: {{ status.Vocabulary }}</p>
+        <p>Number of grammar terms: {{ status.Grammar }}</p>
       {% else %}
         <form action="/recreatedata" method="post">
           <p>Current summary of entries:</p>
-          <p>Number of kanji: {{ Kanji }}</p>
-          <p>Number of vocabulary: {{ Vocabulary }}</p>
-          <p>Number of grammar terms: {{ Grammar }}</p>
-          <p>Number of kanji/vocab cross-references: {{ KanjiVocabulary }}</p>
+          <p>Number of kanji: {{ status.Kanji }}</p>
+          <p>Number of vocabulary: {{ status.Vocabulary }}</p>
+          <p>Number of grammar terms: {{ status.Grammar }}</p>
           <p>Click the following button to recreate all data in the database</p>
           <p>!!!Any changes since the last reload will be lost!!!</p>
           <div><input type="submit" value="Recreate Data"></div>

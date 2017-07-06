@@ -17,7 +17,7 @@
 
 {# Start main body #}
 <body>
-  <img alt="Jim" src="https://cdn.pixabay.com/photo/2016/04/25/16/46/kitadake-1352353__340.jpg" height="150px" width="100%"/>
+  <img alt="Mount Fuji at sunset" src="https://cdn.pixabay.com/photo/2016/04/25/16/46/kitadake-1352353__340.jpg" height="150px" width="100%"/>
 
 {# Start navigation bar #}
 <nav class="navbar navbar-inverse">
@@ -35,10 +35,9 @@
 {% block navigation %}
 {% endblock %}
       </ul>
-      </ul>
       <ul class="nav navbar-nav navbar-right">
         {% if user_dict.user %}
-        <li><a href="{{ user_dict.logout_url }}"><span class="glyphicon glyphicon-log-in"></span> Logout</a></li>
+        <li><a href="{{ user_dict.logout_url }}">User: {{ user_dict.user }} <span class="glyphicon glyphicon-log-in"></span> Logout</a></li>
         {% else %}
         <li><a href="{{ user_dict.login_url }}"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
         {% endif %}

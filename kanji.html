@@ -1,8 +1,9 @@
 {% extends "jinja_template.html" %}
 
 {% block navigation %}
-        <li class="active"><a href="/">Kanji Lookup</a></li>
-        <li class="inactive"><a href="/summary">Summary</a></li>
+        <li class="inactive"><a href="/">Summary</a></li>
+        <li class="active"><a href="/kanjilookup">Kanji Lookup</a></li>
+        <li class="inactive"><a href="/summary">Kanji List</a></li>
         <li class="inactive"><a href="/recreatedata">Recreate Data</a></li>
 {% endblock %}
 
@@ -19,13 +20,11 @@
         <input class="btn btn-primary btn-sm" type="submit" value="Retrieve">
       </form>
     </div>
-    <div class="col-sm-4 text-left" style="padding-top:20px">
-        <input class="btn btn-primary btn-sm" type="button" name="showhidden" value="Shown/hide hidden vocab" onClick="showHidden()">
-        <form method="post" id="hideknow">
-          <input class="btn btn-primary btn-sm" type="submit" name="vocabupdatelist" value="Update vocab" form="hideknow">
-        </form>
-    </div>
   </div>
+{% endblock %}
+
+{% block maincontent %}
+{% if kanji_dict.literal %}
   <div class="row">
     <div class="col-sm-12 text-left"> 
       <h3>Kanji: {% if kanji_dict.known == true %} <span style="color:blue">{{ kanji_dict.literal }}</span> {% else %} {{ kanji_dict.literal }}　{% endif %}</h3>
@@ -44,7 +43,7 @@
     <div class="col-sm-2 text-left"> 
       <p>JLPT Level: {{ kanji_dict.jlpt }}</p>
     </div>
-    <div class="col-sm-4 text-left"> 
+    <div class="col-sm-2 text-left"> 
       <form method="post">
       {% if kanji_dict.known == false %}
         <p>Unknown <input class="btn btn-primary btn-sm" type="submit" name="known" value="Known"></p>
@@ -53,9 +52,14 @@
       </form>
       {% endif %}
     </div>
+    <div class="col-sm-2 text-left">
+        <input class="btn btn-primary btn-sm" type="button" name="showhidden" value="Shown/hide hidden vocab" onClick="showHidden()">
+        <form method="post" id="hideknow">
+          <input class="btn btn-primary btn-sm" type="submit" name="vocabupdatelist" value="Update vocab" form="hideknow">
+        </form>
+    </div>
   </div>
-{% endblock %}
-{% block maincontent %}
+
 <form method="post">
   <div class="row">
     <div class="col-sm-12 text-left"> 
@@ -162,6 +166,7 @@
   {% endfor %}
   </div>
 </form>
+{% endif %}
 <script>
 function showHidden(){
   var toggleElement = document.getElementById("hiddenVocabRow");
