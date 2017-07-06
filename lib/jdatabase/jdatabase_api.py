@@ -142,9 +142,14 @@ class Jdatabase:
         search = re.search(r'</character>', line)
         if search:
           # we have reached the end of one kanji tag
-          # if this is a jouyou kanji, write out the current kanji to the database
-          if ('grade' in kanji and kanji['grade'] >= 1 and kanji['grade'] <= 8):
-            self.insert_kanji(kanji)
+          if self._database == "guest":
+            # only get grades 1 and 2 of jouyou kanji
+            if ('grade' in kanji and kanji['grade'] >= 1 and kanji['grade'] <= 2):
+              self.insert_kanji(kanji)
+          else:
+            # get all jouyou kanji, write out the current kanji to the database
+            if ('grade' in kanji and kanji['grade'] >= 1 and kanji['grade'] <= 8):
+              self.insert_kanji(kanji)
           # reset the string variables for the next kanji
           kanji['literal'] = ''
           kanji['grade'] = None
@@ -175,7 +180,10 @@ class Jdatabase:
             if "</entry>" in line:
               entry_string = "".join(entry_list)
               # we are only interested in storing entries marked as "common"
-              common_entry = re.search("news1|ichi1|spec1|spec2|gai1", entry_string)
+              if self._database == "guest":
+                common_entry = re.search("ichi1", entry_string)
+              else:
+                common_entry = re.search("news1|ichi1|spec1|spec2|gai1", entry_string)
               if common_entry:
                 # search for the keb tab which stores the literal vocab (primary key)
                 search = re.search(r'<keb>(.+)</keb>',entry_string)
@@ -380,6 +388,11 @@ class Jdatabase:
       sql_command = 'SELECT * FROM ' + table
       self.cursor.execute(sql_command)
       status[table] = self.cursor.rowcount
+      
+    sql_command = 'SELECT DATABASE()'
+    self.cursor.execute(sql_command)
+    status['name'] = ''.join(self.cursor.fetchone())
+    #status['name'].encode("utf-8")
     return status
 
   def insert_kanji(self, kanji):

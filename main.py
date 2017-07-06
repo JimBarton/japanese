@@ -38,9 +38,8 @@ def get_user():
 current_data = {}
 current_data['base_url'] = r'kanjilookup?character='
 
-# open a connection to the guest database
+# open a connection to the database
 db = jdatabase.Jdatabase()
-
 class MainPage(webapp2.RequestHandler):
   """ Class for the main page which is overview page """
   template = JINJA_ENVIRONMENT.get_template('index.html')
@@ -48,14 +47,8 @@ class MainPage(webapp2.RequestHandler):
   def get(self):
     """ Render a the lookup page with no selected kanji, requesting input from user """
     current_data['user_dict'] = get_user()
+    current_data['status'] = db.retrieve_status()
     self.response.write(self.template.render(current_data))
-
-  def post(self):
-    """ Retrieve the kanji character input by the user and redirect to the lookup
-        page for this kanji
-    """
-    kanji_literal = cgi.escape(self.request.get('lookup'))
-    self.redirect('kanjilookup?%s' % urllib.urlencode({'character': kanji_literal.encode('utf-8')}))
 
 class KanjiLookup(webapp2.RequestHandler):
   """ Class for displaying results of kanji lookup. Allows user to perform various operations
@@ -131,7 +124,7 @@ class KanjiLookup(webapp2.RequestHandler):
 
 class KanjiList(webapp2.RequestHandler):
   """ Display all jouyou kanji on summary page """
-  template = JINJA_ENVIRONMENT.get_template('summary.html')
+  template = JINJA_ENVIRONMENT.get_template('kanjilist.html')
   current_data['display_order'] = None
   current_data['user_dict'] = get_user()
   

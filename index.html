@@ -1,24 +1,28 @@
 {% extends "jinja_template.html" %}
 
 {% block navigation %}
-        <li class="inactive"><a href="/">Summary</a></li>
-        <li class="active"><a href="/kanjilookup">Kanji Lookup</a></li>
-        <li class="inactive"><a href="/summary">Kanji List</a></li>
+        <li class="active"><a href="/">Home</a></li>
+        <li class="inactive"><a href="/kanjilookup">Kanji Lookup</a></li>
+        <li class="inactive"><a href="/kanjilist">Kanji List</a></li>
         <li class="inactive"><a href="/recreatedata">Recreate Data</a></li>
 {% endblock %}
 
 {% block subtitle %}
   <div class="row">
     <div class="col-sm-12 text-left"> 
-      <h2>Kanji Lookup</h2>
+      <h2>Main</h2>
     </div>
   </div>
-  <div class="row">
-    <div class="col-sm-12 text-left" style="padding-top:20px">
-      <form method="post">
-        <input type="text" name="lookup" maxlength="1" placeholder="Enter single kanji to retrieve">
-        <input class="btn btn-primary btn-sm" type="submit" value="Retrieve">
-      </form>
+{% endblock %}
+
+{% block maincontent %}
+  <div class="row content">
+    <div class="col-sm-12 text-left"> 
+      <h3>Database Status:</h3>
+      <p>Database name: {{ status.name }}</p>
+      <p>Number of kanji: {{ status.Kanji }}</p>
+      <p>Number of vocabulary: {{ status.Vocabulary }}</p>
+      <p>Number of grammar terms: {{ status.Grammar }}</p>
     </div>
   </div>
 {% endblock %}

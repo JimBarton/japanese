@@ -1,9 +1,9 @@
 {% extends "jinja_template.html" %}
 
 {% block navigation %}
-        <li class="inactive"><a href="/">Summary</a></li>
+        <li class="inactive"><a href="/">Home</a></li>
         <li class="active"><a href="/kanjilookup">Kanji Lookup</a></li>
-        <li class="inactive"><a href="/summary">Kanji List</a></li>
+        <li class="inactive"><a href="/kanjilist">Kanji List</a></li>
         <li class="inactive"><a href="/recreatedata">Recreate Data</a></li>
 {% endblock %}
 
@@ -49,8 +49,8 @@
         <p>Unknown <input class="btn btn-primary btn-sm" type="submit" name="known" value="Known"></p>
       {% else %}
         <p>Known <input class="btn btn-primary btn-sm" type="submit" name="unknown" value="Unknown"></p>
-      </form>
       {% endif %}
+      </form>
     </div>
     <div class="col-sm-2 text-left">
         <input class="btn btn-primary btn-sm" type="button" name="showhidden" value="Shown/hide hidden vocab" onClick="showHidden()">
