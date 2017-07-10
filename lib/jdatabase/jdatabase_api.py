@@ -286,8 +286,12 @@ class Jdatabase:
       if data:
         kanji_dict['id'], kanji_dict['literal'], kanji_dict['grade'] ,kanji_dict['strokecount'], kanji_dict['frequency'], kanji_dict['jlpt'], kanji_dict['known'], kanji_dict['display'] = data
       else:
-        kanji_dict['error'] = 'Character ' + character + ' is either not a japanese kanji or it is outside the jouyou list and does not exist in this database' 
-    
+        if self._database == "guest":
+          kanji_dict['error'] = 'The current version of this application uses only grades 1 and 2 of the jouyou kanji (240 characters). '\
+            'Character "' + character + '" is either not in this set or it is not a Japanese kanji'
+        else:
+          kanji_dict['error'] = 'This application uses the jouyou kanji (2136 characters). '\
+            'Character "' + character + '" is either not in this set or it is not a Japanese kanji'
     return kanji_dict
 
   def retrieve_kanji_vocab(self, character):
