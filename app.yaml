@@ -4,7 +4,7 @@ threadsafe: yes
 
 handlers:
 - url: /css
-  static_dir: cssz
+  static_dir: css
 
 - url: /admin
   login: admin
