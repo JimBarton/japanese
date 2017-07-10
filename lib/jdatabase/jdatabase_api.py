@@ -379,8 +379,15 @@ class Jdatabase:
     return kanji_list
 
   def retrieve_status(self):
-    """ Retrieves the number of entries in each table and returns this as as dictionary """
+    """ Retrieves the number of entries in each table and returns this as as dictionary.
+        Also returns summary of known statuses
+    """
     status = {}
+
+    sql_command = 'SELECT DATABASE()'
+    self.cursor.execute(sql_command)
+    status['name'] = ''.join(self.cursor.fetchone())
+
     #tables = ('Kanji', 'Vocabulary', 'Grammar', 'KanjiVocabulary')
     tables = ('Kanji', 'Vocabulary', 'Grammar')
     for table in tables:
@@ -388,10 +395,14 @@ class Jdatabase:
       self.cursor.execute(sql_command)
       status[table] = self.cursor.rowcount
       
-    sql_command = 'SELECT DATABASE()'
+    sql_command = 'SELECT * FROM Kanji WHERE known = TRUE'
     self.cursor.execute(sql_command)
-    status['name'] = ''.join(self.cursor.fetchone())
-    #status['name'].encode("utf-8")
+    status['known_kanji'] = self.cursor.rowcount
+      
+    sql_command = 'SELECT * FROM Vocabulary WHERE known = TRUE'
+    self.cursor.execute(sql_command)
+    status['known_vocab'] = self.cursor.rowcount
+    
     return status
 
   def insert_kanji(self, kanji):

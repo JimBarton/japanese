@@ -10,19 +10,24 @@
 {% block subtitle %}
   <div class="row">
     <div class="col-sm-12 text-left"> 
-      <h2>Main</h2>
+      <h2>Summary Page</h2>
     </div>
   </div>
 {% endblock %}
 
 {% block maincontent %}
   <div class="row content">
-    <div class="col-sm-12 text-left"> 
+    <div class="col-sm-6 text-left"> 
       <h3>Database Status:</h3>
       <p>Database name: {{ status.name }}</p>
       <p>Number of kanji: {{ status.Kanji }}</p>
       <p>Number of vocabulary: {{ status.Vocabulary }}</p>
       <p>Number of grammar terms: {{ status.Grammar }}</p>
     </div>
+    <div class="col-sm-6 text-left"> 
+      <h3>User Status:</h3>
+      <p>Logged in as user: {{ user_dict.user }}</p> 
+      <p>Number of known kanji: {{ status.known_kanji }}</p> 
+      <p>Number of known vocabulary: {{ status.known_vocab }}</p> 
   </div>
 {% endblock %}

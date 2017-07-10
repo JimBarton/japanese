@@ -37,7 +37,7 @@
       </ul>
       <ul class="nav navbar-nav navbar-right">
         {% if user_dict.user %}
-        <li><a href="{{ user_dict.logout_url }}">User: {{ user_dict.user }} <span class="glyphicon glyphicon-log-in"></span> Logout</a></li>
+        <li><a href="{{ user_dict.logout_url }}"><span class="glyphicon glyphicon-log-in"></span> Logout</a></li>
         {% else %}
         <li><a href="{{ user_dict.login_url }}"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
         {% endif %}
