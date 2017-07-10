@@ -166,6 +166,13 @@
   {% endfor %}
   </div>
 </form>
+{% elif kanji_dict.error %}
+  <div class="row">
+    <div class="col-sm-12 text-left"> 
+      <h3>{{kanji_dict.error}}</h3>
+    </div>
+  </div>
+
 {% endif %}
 <script>
 function showHidden(){

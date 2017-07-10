@@ -280,14 +280,13 @@ class Jdatabase:
     try:
       self.cursor.execute(sql_command, (character))
     except MySQLdb.Error as e:
-      print e
+      kanji_dict['error'] = e
     else:
       data = self.cursor.fetchone()
       if data:
-        print data
         kanji_dict['id'], kanji_dict['literal'], kanji_dict['grade'] ,kanji_dict['strokecount'], kanji_dict['frequency'], kanji_dict['jlpt'], kanji_dict['known'], kanji_dict['display'] = data
       else:
-        print "Kanji does not exist in the database"
+        kanji_dict['error'] = 'Character ' + character + ' is either not a japanese kanji or it is outside the jouyou list and does not exist in this database' 
     
     return kanji_dict
 
@@ -317,7 +316,7 @@ class Jdatabase:
       for character in character_set:
         if re.search(kanji_regex, character, re.U): # if this is a kanji character
           kanji = self.retrieve_kanji(character)
-          if kanji:
+          if 'literal' in kanji:
             if kanji['known'] == True:
               character_dict[character] = 1 # kanji in database and known
             else:
