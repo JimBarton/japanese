@@ -57,21 +57,26 @@ class KanjiLookup(webapp2.RequestHandler):
       on the displayed data """
   template = JINJA_ENVIRONMENT.get_template('kanji.html')
   current_data['user_dict'] = get_user()
+  current_data['kanji_dict'] = {}
+  current_data['vocab_list'] = []
+  current_data['character_dict'] = {}
   
   def get(self):
     """ Ask user to enter kanji """
     print "a get"
-    current_data['kanji_dict'] = {}
-    current_data['vocab_list'] = []
-    current_data['character_dict'] = {}
+    #current_data['kanji_dict'] = {}
+    #current_data['vocab_list'] = []
+    #current_data['character_dict'] = {}
 
     if self.request.get('character'):
       kanji_literal = self.request.get('character')
       logging.info(kanji_literal)
     
       current_data['kanji_dict'] = db.retrieve_kanji(kanji_literal)
-      current_data['vocab_list'], current_data['character_dict'] = db.retrieve_kanji_vocab(current_data['kanji_dict']['literal'])
+      if 'literal' in current_data['kanji_dict']:
+        current_data['vocab_list'], current_data['character_dict'] = db.retrieve_kanji_vocab(current_data['kanji_dict']['literal'])
 
+    logging.info(current_data)
     self.response.write(self.template.render(current_data))
 
   def post(self):
@@ -84,14 +89,12 @@ class KanjiLookup(webapp2.RequestHandler):
     # If this is a new kanji lookup then retrieve it from the database and add it to memory cache
     logging.info(self.request.POST)
     if 'lookup' in self.request.POST:
-      print "lookup"
       kanji_literal = cgi.escape(self.request.get('lookup'))
-      current_data['kanji_dict'] = db.retrieve_kanji(kanji_literal)
-      current_data['vocab_list'], current_data['character_dict'] = db.retrieve_kanji_vocab(current_data['kanji_dict']['literal'])
-      print "redirect"
-      #self.redirect('kanjilookup?%s' % urllib.urlencode({'character': kanji_literal.encode('utf-8')}), abort=True)
+      #current_data['kanji_dict'] = db.retrieve_kanji(kanji_literal)
+      #if 'literal' in current_data['kanji_dict']:
+        #current_data['vocab_list'], current_data['character_dict'] = db.retrieve_kanji_vocab(current_data['kanji_dict']['literal'])
+        #self.redirect('kanjilookup?%s' % urllib.urlencode({'character': kanji_literal.encode('utf-8')}), abort=True)
       return self.redirect('kanjilookup?%s' % urllib.urlencode({'character': kanji_literal.encode('utf-8')}), abort=True)
-      print "redirected"
     elif 'known' in self.request.POST:
       current_data['kanji_dict']['known'] = True
       current_data['character_dict'][current_data['kanji_dict']['literal']] = 1
