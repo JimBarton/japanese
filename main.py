@@ -17,8 +17,9 @@ from google.appengine.api import users
 import jdatabase
 
 # set up our jinja environment
+templates_dir = os.path.join(os.path.dirname(__file__), 'templates')
 JINJA_ENVIRONMENT = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
+    loader=jinja2.FileSystemLoader(templates_dir),
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
           
@@ -40,6 +41,7 @@ current_data['base_url'] = r'kanjilookup?character='
 
 # open a connection to the database
 db = jdatabase.Jdatabase()
+
 class MainPage(webapp2.RequestHandler):
   """ Class for the main page which is overview page """
   template = JINJA_ENVIRONMENT.get_template('index.html')
@@ -161,11 +163,11 @@ class KanjiList(webapp2.RequestHandler):
     logging.info(self.request.POST)    
     self.response.write(self.template.render(current_data))
 
-class RecreateData(webapp2.RequestHandler):
+class Administration(webapp2.RequestHandler):
   """ Class for displaying database stats and option to recreate the database from scratch.
       Just for development really
   """
-  template = JINJA_ENVIRONMENT.get_template('recreatedata.html')
+  template = JINJA_ENVIRONMENT.get_template('admin.html')
   current_data['user_dict'] = get_user()
 
   def get(self):
@@ -185,5 +187,5 @@ app = webapp2.WSGIApplication([
     (r'/', MainPage),
     (r'/kanjilookup', KanjiLookup),
     (r'/kanjilist', KanjiList),
-    (r'/recreatedata', RecreateData)
+    (r'/admin', Administration)
 ], debug=True)

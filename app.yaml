@@ -3,11 +3,13 @@ api_version: 1
 threadsafe: yes
 
 handlers:
-- url: /html
-  static_dir: html
-
 - url: /css
-  static_dir: css
+  static_dir: cssz
+
+- url: /admin
+  login: admin
+  script: main.app
+  auth_fail_action: unauthorized
 
 - url: /.*
   script: main.app
@@ -31,7 +33,7 @@ skip_files:
 - .+\.xml
 
 error_handlers:
-  - file: default_error.html
+  - file: templates/default_error.html
   
   # [START env_variables]
 env_variables:
