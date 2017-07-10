@@ -63,10 +63,6 @@ class KanjiLookup(webapp2.RequestHandler):
   
   def get(self):
     """ Ask user to enter kanji """
-    print "a get"
-    #current_data['kanji_dict'] = {}
-    #current_data['vocab_list'] = []
-    #current_data['character_dict'] = {}
 
     if self.request.get('character'):
       kanji_literal = self.request.get('character')

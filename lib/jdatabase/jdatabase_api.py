@@ -95,11 +95,10 @@ class Jdatabase:
       #'FOREIGN KEY (vocabularyid) REFERENCES Vocabulary (id))')
 
     for sql_command in sql_command_list:
-      print sql_command
       try:
         self.cursor.execute(sql_command)
       except MySQLdb.Error as e:
-        print e
+        logging.error(e)
       else:
         self.conn.commit()
       
@@ -208,14 +207,12 @@ class Jdatabase:
                     last_pos = pos
                   else:
                     pos = last_pos
-                  #print pos.group(1) + " -latest pos"
                   glosses = re.findall(r'<gloss>(.+)</gloss>',sense)
                   senses_list.append(pos.group(1) + '#' +', '.join(glosses) + ':')
 
                 # insert the retreived vocabulary entry into the database
                 vocab['meanings'] = '|'.join(senses_list)
                 self.insert_vocab(vocab)
-                #print vocab
 
               # clear the local vocab entry ready for the next one
               senses_list = []
@@ -236,7 +233,7 @@ class Jdatabase:
     try:
       self.cursor.execute(sql_command)
     except MySQLdb.Error as e:
-      print e
+      logging.error(e)
     else:
       kanji_tuple = self.cursor.fetchall()
       # select all vocabulary entries where each kanji appears
@@ -245,7 +242,7 @@ class Jdatabase:
         try:
           self.cursor.execute(sql_command1, ("%" + kanji[1] + "%"))
         except MySQLdb.Error as e:
-          print e
+          logging.error(e)
         else:
           vocab_tuple = self.cursor.fetchall()
           # insert a row in the table for each vocab entry that corresponds to this kanji
@@ -255,7 +252,7 @@ class Jdatabase:
             try:
               self.cursor.execute(sql_command2, (kanji[0],vocab[0]))
             except MySQLdb.Error as e:
-              print e
+              logging.error(e)
             else:
               self.conn.commit()
   
@@ -312,9 +309,8 @@ class Jdatabase:
       #self.cursor.execute(sql_command, ("%" + character + "%"))
       self.cursor.execute(sql_command, ([where_clause]))
     except MySQLdb.Error as e:
-      print e
+      logging.error(e)
     else:
-      print self.cursor._last_executed
       vocab_tuple = self.cursor.fetchall()
       character_set = set([a for x in vocab_tuple for a in x[1]])
       for character in character_set:
@@ -371,7 +367,7 @@ class Jdatabase:
     try:
       self.cursor.execute(sql_command, (filter['min_stroke'], filter['max_stroke'], filter['min_grade'], filter['max_grade'], filter['min_freq'], filter['max_freq'], filter['min_jlpt'], filter['max_jlpt']))
     except MySQLdb.Error as e:
-      print e
+      logging.error(e)
     else:
       data = self.cursor.fetchall()
       for kanji in data:
@@ -406,7 +402,7 @@ class Jdatabase:
     try:
       self.cursor.execute(sql_command, (kanji['literal'], kanji['grade'], kanji['strokecount'], kanji['frequency'], kanji['jlpt']))
     except MySQLdb.Error as e:
-      print e
+      logging.error(e)
     else:
       self.conn.commit()
 
@@ -414,12 +410,11 @@ class Jdatabase:
     """ Inserts a new vocabulary entry into the database using a vocab dictionary as input
     """
     sql_command = 'INSERT INTO Vocabulary(literal, reading, meanings, known, display)VALUES(%s,%s,%s,FALSE,TRUE)'
-    #print sql_command
+
     try:
       self.cursor.execute(sql_command, (vocab['literal'], vocab['reading'], vocab['meanings']))
     except MySQLdb.Error as e:
-      print e
-      print vocab['meanings']
+      logging.error(e)
     else:
       self.conn.commit()
 
@@ -429,16 +424,16 @@ class Jdatabase:
     try:
       self.cursor.execute(sql_command, (name, description))
     except MySQLdb.Error as e:
-      print e
+      logging.error(e)
       if re.search(r'Duplicate',e.args[1]):
         new_name = name + '2'
         sql_command = 'INSERT INTO Grammar(name, description)VALUES(%s,%s)'
         try:
           self.cursor.execute(sql_command, (new_name, description))
         except MySQLdb.Error as e:
-          print e
+          logging.error(e)
         else:
-          print 'Duplicate resolved as', new_name
+          logging.warning('Duplicate resolved as', new_name)
           self.conn.commit()
 
   def update_kanji_known_status(self, kanji):
@@ -447,7 +442,7 @@ class Jdatabase:
     try:
       self.cursor.execute(sql_command, (kanji['known'], kanji['id']))
     except MySQLdb.Error as e:
-      print e
+      logging.error(e)
     else:
       self.conn.commit()
 
@@ -457,7 +452,7 @@ class Jdatabase:
     try:
       self.cursor.execute(sql_command, (vocab['display'], vocab['id']))
     except MySQLdb.Error as e:
-      print e
+      logging.error(e)
     else:
       self.conn.commit()
 
@@ -467,6 +462,6 @@ class Jdatabase:
     try:
       self.cursor.execute(sql_command, (vocab['known'], vocab['id']))
     except MySQLdb.Error as e:
-      print e
+      logging.error(e)
     else:
       self.conn.commit()
