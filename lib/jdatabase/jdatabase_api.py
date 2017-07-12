@@ -340,32 +340,44 @@ class Jdatabase:
     """
     kanji_dict = {}
     kanji_list = []
-    sql_command = 'SELECT * FROM Kanji '\
-      'WHERE (strokecount BETWEEN (%s) AND (%s))'\
-      'AND (grade BETWEEN (%s) AND (%s))'
+    sql_command = 'SELECT * FROM Kanji'\
+      ' WHERE (strokecount BETWEEN (%s) AND (%s))'\
+      ' AND (grade BETWEEN (%s) AND (%s))'
 
     if filter['no_freq'] == False:
-      sql_command += 'AND (frequency BETWEEN (%s) AND (%s))'
+      sql_command += ' AND (frequency BETWEEN (%s) AND (%s))'
     else:
-      sql_command += 'AND (frequency BETWEEN (%s) AND (%s) OR (frequency IS NULL))'
+      sql_command += ' AND (frequency BETWEEN (%s) AND (%s) OR (frequency IS NULL))'
 
     if filter['no_jlpt'] == False:
-      sql_command += 'AND (jlpt BETWEEN (%s) AND (%s))'
+      sql_command += ' AND (jlpt BETWEEN (%s) AND (%s))'
     else:
-      sql_command += 'AND (jlpt BETWEEN (%s) AND (%s) OR (jlpt IS NULL))'
+      sql_command += ' AND (jlpt BETWEEN (%s) AND (%s) OR (jlpt IS NULL))'
 
     if filter['known_flag'] == 'true':
       known_flag = True
-      sql_command += 'AND (known = True)'
+      sql_command += ' AND (known = True)'
     elif filter['known_flag'] == 'false':
       known_flag = False
-      sql_command += 'AND (known = False)'
+      sql_command += ' AND (known = False)'
     else:
       known_flag = 'true'
-      sql_command += 'AND (known = True OR known = False)'
+      sql_command += ' AND (known = True OR known = False)'
+    
+    if filter['display_order'] == 'grade':
+      sql_command += 'ORDER BY -grade DESC'
+    elif filter['display_order'] == 'frequency':
+      sql_command += 'ORDER BY -frequency DESC'
+    elif filter['display_order'] == 'jlpt':
+      sql_command += 'ORDER BY -jlpt DESC'
+    else:
+      sql_command += 'ORDER BY -strokecount DESC'
+    
+    #sql_command += ' ORDER BY (CASE WHEN (%s) IS NULL then 1 ELSE 0 END)'
     
     try:
       self.cursor.execute(sql_command, (filter['min_stroke'], filter['max_stroke'], filter['min_grade'], filter['max_grade'], filter['min_freq'], filter['max_freq'], filter['min_jlpt'], filter['max_jlpt']))
+      print(self.cursor._last_executed)
     except MySQLdb.Error as e:
       logging.error(e)
     else:

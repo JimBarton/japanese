@@ -15,8 +15,8 @@
   </div>
   <div class="row">
     <div class="col-sm-8 text-left" style="padding-top:20px">
-      <form method="post">
-        <input type="text" name="lookup" maxlength="1" placeholder="Enter single kanji to retrieve">
+      <form method="get">
+        <input type="text" name="character" maxlength="1" placeholder="Enter single kanji to retrieve">
         <input class="btn btn-primary btn-sm" type="submit" value="Retrieve">
       </form>
     </div>
@@ -24,7 +24,7 @@
 {% endblock %}
 
 {% block maincontent %}
-{% if kanji_dict.literal %}
+{% if kanji_dict and kanji_dict.literal %}
   <div class="row">
     <div class="col-sm-12 text-left"> 
       <h3>Kanji: {% if kanji_dict.known == true %} <span style="color:blue">{{ kanji_dict.literal }}</span> {% else %} {{ kanji_dict.literal }}　{% endif %}</h3>
@@ -166,13 +166,12 @@
   {% endfor %}
   </div>
 </form>
-{% elif kanji_dict.error %}
+{% elif kanji_dict and kanji_dict.error %}
   <div class="row">
     <div class="col-sm-12 text-left"> 
       <h3>{{kanji_dict.error}}</h3>
     </div>
   </div>
-
 {% endif %}
 <script>
 function showHidden(){

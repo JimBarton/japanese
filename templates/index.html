@@ -26,9 +26,9 @@
     </div>
     <div class="col-sm-6 text-left"> 
       <h3>User Status:</h3>
-      <p>Logged in as user: {{ user_dict.user }}</p> 
-      <p>Number of known kanji: {{ status.known_kanji }}</p> 
-      <p>Number of known vocabulary: {{ status.known_vocab }}</p> 
+      <p>Logged in as user: {{ user_dict.user }}</p>
+        <p>Number of known kanji: <a href="/kanjilist">{{ status.known_kanji }}</a></p> 
+        <p>Number of known vocabulary: {{ status.known_vocab }}</p> 
     </div>
   </div>
 {% endblock %}
