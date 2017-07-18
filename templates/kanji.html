@@ -9,15 +9,18 @@
 
 {% block subtitle %}
   <div class="row">
-    <div class="col-sm-12 text-left"> 
-      <h2>Kanji Lookup</h2>
+    <div class="col-sm-6 text-left"> 
+      <h2>Kanji Lookup {% if kanji_dict and kanji_dict.literal %} {{ kanji_dict.literal }} {% endif %}</h2>
     </div>
   </div>
-  <div class="row">
-    <div class="col-sm-8 text-left" style="padding-top:20px">
+<hr>
+  <div class="row" style="padding-bottom:20px">
+    <div class="col-sm-6 text-left"> 
       <form method="get">
-        <input type="text" name="character" maxlength="1" placeholder="Enter single kanji to retrieve">
-        <input class="btn btn-primary btn-sm" type="submit" value="Retrieve">
+        <label class="sr-only" for="kanjiinput">Enter kanji</label>
+        <input type="text" name="character" maxlength="1" id="kanjiinput" placeholder="Enter single kanji to retrieve">
+        <label class="sr-only" for="kanjiretrievebutton">Retrieve kanji</label>
+        <input class="btn btn-primary btn-sm" type="submit" id="kanjiretrievebutton" value="Retrieve">
       </form>
     </div>
   </div>
@@ -25,147 +28,157 @@
 
 {% block maincontent %}
 {% if kanji_dict and kanji_dict.literal %}
-  <div class="row">
-    <div class="col-sm-12 text-left"> 
-      <h3>Kanji: {% if kanji_dict.known == true %} <span style="color:blue">{{ kanji_dict.literal }}</span> {% else %} {{ kanji_dict.literal }}　{% endif %}</h3>
+<div class="panel-group">
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4 class="panel-title">Kanji</h4>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+      <div class="col-sm-2 text-left">
+        <p>Character: {% if kanji_dict.known == true %} <span style="color:blue">{{ kanji_dict.literal }}</span> {% else %} {{ kanji_dict.literal }}　{% endif %}</p>
+      </div>
+      <div class="col-sm-2 text-left">
+        <p>Grade: {{ kanji_dict.grade }}</p>
+      </div>
+      <div class="col-sm-2 text-left">
+        <p>Strokecount: {{ kanji_dict.strokecount }}</p>
+      </div>
+      <div class="col-sm-2 text-left">
+        <p>Frequency: {{ kanji_dict.frequency }}</p>
+      </div>
+      <div class="col-sm-4 text-left"> 
+        <p>JLPT Level: {{ kanji_dict.jlpt }}</p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-12 text-left">
+        <form method="post">
+          {%- if kanji_dict.known == false -%}
+            <input class="btn btn-primary btn-sm" type="submit" name="known" value="Mark as known">
+          {%- else -%}
+            <input class="btn btn-primary btn-sm" type="submit" name="unknown" value="Mark as unknown">
+          {%- endif -%}
+        </form>
+      </div>
     </div>
   </div>
-  <div class="row">
-    <div class="col-sm-2 text-left">
-      <p>Grade: {{ kanji_dict.grade }}</p>
+</div>
+
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title"><a data-toggle="collapse" href="#collapse1">Vocabulary</a></h4>
     </div>
-    <div class="col-sm-2 text-left">
-      <p>Strokecount: {{ kanji_dict.strokecount }}</p>
-    </div>
-    <div class="col-sm-2 text-left">
-      <p>Frequency: {{ kanji_dict.frequency }}</p>
-    </div>
-    <div class="col-sm-2 text-left"> 
-      <p>JLPT Level: {{ kanji_dict.jlpt }}</p>
-    </div>
-    <div class="col-sm-2 text-left"> 
-      <form method="post">
-      {% if kanji_dict.known == false %}
-        <p>Unknown <input class="btn btn-primary btn-sm" type="submit" name="known" value="Known"></p>
-      {% else %}
-        <p>Known <input class="btn btn-primary btn-sm" type="submit" name="unknown" value="Unknown"></p>
-      {% endif %}
-      </form>
-    </div>
-    <div class="col-sm-2 text-left">
-        <input class="btn btn-primary btn-sm" type="button" name="showhidden" value="Shown/hide hidden vocab" onClick="showHidden()">
-        <form method="post" id="hideknow">
-          <input class="btn btn-primary btn-sm" type="submit" name="vocabupdatelist" value="Update vocab" form="hideknow">
-        </form>
+    <div id="collapse1" class="panel-collapse collapse in">
+      <div class="panel-body">
+        {%- for vocab in vocab_list -%}
+          <div class="row">
+            {%- if vocab.display == True -%}
+              <div class="col-sm-3 text-left">
+                {%- if vocab.known == false -%}
+                  <p>
+                {%- else -%}
+                  <p style="background-color: #ffdddd">
+                {%- endif -%}
+                {%- for each_kanji in vocab.literal -%}
+                  {% set character_type = character_dict[each_kanji] %}
+                  {%- if character_type == 0 -%}
+                    <a href="{{ base_url }}{{ each_kanji }}" style="color:black">{{- each_kanji -}}</a>
+                  {%- elif character_type == 1 -%}
+                    <a href="{{ base_url }}{{ each_kanji }}" style="color:blue">{{- each_kanji -}}</a>
+                  {%- elif character_type == -1 -%}
+                    <span style="color:red">{{- each_kanji -}}</span>
+                  {%- else -%}
+                    {{- each_kanji -}}
+                  {%- endif -%}
+                {%- endfor -%}
+                <span style="padding-left:10px" id="readingsColumn_{{ vocab.id }}">{{- vocab.reading }}</span>
+                </p>
+              </div>
+              <div class="col-sm-6 text-left">
+                <p>{{- vocab.meanings -}}</p>
+              </div>
+              <div class="col-sm-2 text-left">
+                <div class="checkbox">
+                  <label style="padding-right:20px"><input type="checkbox" name="unhidden" value="{{ vocab.id }}" form="hideknow">Hide</label>
+                  {%- if vocab.known == false -%}
+                    <label><input type="checkbox" name="vocabnotknown" value="{{ vocab.id }}" form="hideknow">Known</label>
+                  {%- else -%}
+                    <label><input type="checkbox" name="vocabknown" value="{{ vocab.id }}" form="hideknow">Unknown</label>
+                  {%- endif -%}
+                </div>
+              </div>
+            {%- endif -%}
+          </div>
+        {% endfor %}
+        <div class="row">
+          <div class="col-sm-12 text-left">
+            <form method="post" id="hideknow">
+              <input class="btn btn-primary btn-sm" type="submit" name="vocabupdatelist" value="Submit changes" form="hideknow">
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-<form method="post">
-  <div class="row">
-    <div class="col-sm-12 text-left"> 
-      <h3>Vocabulary (in use):</h3>
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title"> <a data-toggle="collapse" href="#collapse2">Hidden Vocabulary</a></h4>
+    </div>
+    <div id="collapse2" class="panel-collapse collapse">
+      <div class="panel-body">
+        {%- for vocab in vocab_list -%}
+          <div class="row">
+            {%- if vocab.display == False -%}
+              <div class="col-sm-3 text-left">
+                {%- if vocab.known == false -%}
+                  <p>
+                {%- else -%}
+                  <p style="background-color: #ffdddd">
+                {%- endif -%}
+                {%- for each_kanji in vocab.literal -%}
+                  {% set character_type = character_dict[each_kanji] %}
+                  {%- if character_type == 0 -%}
+                    <a href="{{ base_url }}{{ each_kanji }}" style="color:black">{{- each_kanji -}}</a>
+                  {%- elif character_type == 1 -%}
+                    <a href="{{ base_url }}{{ each_kanji }}" style="color:blue">{{- each_kanji -}}</a>
+                  {%- elif character_type == -1 -%}
+                    <span style="color:red">{{- each_kanji -}}</span>
+                  {%- else -%}
+                    {{- each_kanji -}}
+                  {%- endif -%}
+                {%- endfor -%}
+                <span style="padding-left:10px" id="readingsColumn_{{ vocab.id }}">{{- vocab.reading }}</span>
+                </p>
+              </div>
+              <div class="col-sm-6 text-left">
+                <p>{{ vocab.meanings }}</p>
+              </div>
+              <div class="col-sm-2 text-left">
+                <div class="checkbox">
+                  <label style="padding-right:20px"><input type="checkbox" name="hidden" value="{{ vocab.id }}" form="hideknow2">Unhide</label>
+                  {%- if vocab.known == false -%}
+                    <label><input type="checkbox" name="vocabnotknown" value="{{ vocab.id }}" form="hideknow2">Known</label>
+                  {%- else -%}
+                    <label><input type="checkbox" name="vocabknown" value="{{ vocab.id }}" form="hideknow2">Unknown</label>
+                  {%- endif -%}
+                </div>
+              </div>
+            {%- endif -%}
+          </div>
+        {% endfor %}
+        <div class="row">
+          <div class="col-sm-12 text-left">
+            <form method="post" id="hideknow2">
+              <input class="btn btn-primary btn-sm" type="submit" name="vocabupdatelist" value="Submit changes" form="hideknow2">
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-  {%- for vocab in vocab_list -%}
-    <div class="row">
-      {%- if vocab.display == True -%}
-      <div class="col-sm-2 text-left">
-      {%- if vocab.known == false -%}
-      <p>
-      {%- else -%}
-      <p style="background-color: #ffdddd">
-      {%- endif -%}
-        {%- for each_kanji in vocab.literal -%}
-          {% set character_type = character_dict[each_kanji] %}
-          {%- if character_type == 0 -%}
-            <a href="{{ base_url }}{{ each_kanji }}" style="color:black">{{- each_kanji -}}</a>
-          {%- elif character_type == 1 -%}
-            <a href="{{ base_url }}{{ each_kanji }}" style="color:blue">{{- each_kanji -}}</a>
-          {%- elif character_type == -1 -%}
-            <span style="color:red">{{- each_kanji -}}</span>
-          {%- else -%}
-            {{- each_kanji -}}
-          {%- endif -%}
-        {%- endfor -%}
-      </p>
-      </div>
-      <div class="col-sm-2 text-left">
-        <p id="readingsColumn_{{ vocab.id }}">{{- vocab.reading -}}</p>
-      </div>
-      <div class="col-sm-5 text-left">
-        <p>{{- vocab.meanings -}}</p>
-      </div>
-      <div class="col-sm-1 text-left">
-        <div class="checkbox">
-          <label><input type="checkbox" name="unhidden" value="{{ vocab.id }}" form="hideknow">Hide</label>
-        </div>
-      </div>
-      <div class="col-sm-2 text-left">
-        <div class="checkbox">
-          {%- if vocab.known == false -%}
-            <label><input type="checkbox" name="vocabnotknown" value="{{ vocab.id }}" form="hideknow">Mark known</label>
-          {%- else -%}
-            <label><input type="checkbox" name="vocabknown" value="{{ vocab.id }}" form="hideknow">Mark unknown</label>
-          {%- endif -%}
-        </div>
-      </div>
-      {%- endif -%}
-    </div>
-  {% endfor %}
-  <div id="hiddenVocabRow" style="display:none">
-  <div class="row">
-    <div class="col-sm-12 text-left"> 
-      <h3>Vocabulary (hidden):</h3>
-    </div>
-  </div>
-  {%- for vocab in vocab_list -%}
-    <div class="row">
-      {%- if vocab.display == False -%}
-      <div class="col-sm-2 text-left">
-      {% if vocab.known == false %}
-      <p>
-      {% else %}
-      <p style="background-color: #ffdddd">
-      {% endif %}
-        {%- for each_kanji in vocab.literal -%}
-          {% set character_type = character_dict[each_kanji] %}
-          {%- if character_type == 0 -%}
-            <a href="{{ base_url }}{{ each_kanji }}" style="color:black">{{- each_kanji -}}</a>
-          {%- elif character_type == 1 -%}
-            <a href="{{ base_url }}{{ each_kanji }}" style="color:blue">{{- each_kanji -}}</a>
-          {%- elif character_type == -1 -%}
-            <span style="color:red">{{- each_kanji -}}</span>
-          {%- else -%}
-            {{- each_kanji -}}
-          {%- endif -%}
-        {%- endfor -%}
-      </p>
-      </div>
-      <div class="col-sm-2 text-left">
-        <p>{{ vocab.reading }}</p>
-      </div>
-      <div class="col-sm-5 text-left">
-        <p>{{ vocab.meanings }}</p>
-      </div>
-      <div class="col-sm-1 text-left">
-        <div class="checkbox">
-          <label><input type="checkbox" name="hidden" value="{{ vocab.id }}" form="hideknow">Unhide</label>
-        </div>
-      </div>
-      <div class="col-sm-2 text-left">
-        <div class="checkbox">
-          {% if vocab.known == false %}
-            <label><input type="checkbox" name="vocabnotknown" value="{{ vocab.id }}" form="hideknow">Mark known</label>
-          {% else %}
-            <label><input type="checkbox" name="vocabknown" value="{{ vocab.id }}" form="hideknow">Mark unknown</label>
-          {% endif %}
-        </div>
-      </div>
-      {%- endif -%}
-    </div>
-  {% endfor %}
-  </div>
-</form>
+</div>
 {% elif kanji_dict and kanji_dict.error %}
   <div class="row">
     <div class="col-sm-12 text-left"> 
@@ -173,11 +186,5 @@
     </div>
   </div>
 {% endif %}
-<script>
-function showHidden(){
-  var toggleElement = document.getElementById("hiddenVocabRow");
-  toggleElement.style.display = toggleElement.style.display === "block" ? "none" : "block";
-}
-</script>
 {% endblock %}
 

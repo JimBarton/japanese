@@ -117,7 +117,7 @@ class KanjiList(webapp2.RequestHandler):
   
   def get(self):
     current_data = { 'display_order' : 'grade',
-  	                 'min_stroke' : 1, 'max_stroke' : 29, 'min_freq' : 1, 'max_freq' : 2500,
+  	                 'min_stroke' : 1, 'max_stroke' : 29, 'min_freq' : 1, 'max_freq' : 2501,
                      'no_freq' : False,
                      'min_grade' : 1, 'max_grade' : 8, 'min_jlpt' : 1, 'max_jlpt' : 4,
                      'no_jlpt' : False, 'known_flag' : 'true'

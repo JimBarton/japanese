@@ -13,22 +13,37 @@
       <h2>Summary Page</h2>
     </div>
   </div>
+<hr>
 {% endblock %}
 
 {% block maincontent %}
-  <div class="row content">
-    <div class="col-sm-6 text-left"> 
-      <h3>Database Status:</h3>
-      <p>Database name: {{ status.name }}</p>
-      <p>Number of kanji: {{ status.Kanji }}</p>
-      <p>Number of vocabulary: {{ status.Vocabulary }}</p>
-      <p>Number of grammar terms: {{ status.Grammar }}</p>
+<div class="panel-group">
+  <div class="row">
+    <div class="col-sm-6 text-left">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">Database</h4>
+        </div>
+        <div class="panel-body">
+          <p>Database name: {{ status.name }}</p>
+          <p>Number of kanji: {{ status.Kanji }}</p>
+          <p>Number of vocabulary: {{ status.Vocabulary }}</p>
+          <p>Number of grammar terms: {{ status.Grammar }}</p>
+        </div>
+      </div>
     </div>
     <div class="col-sm-6 text-left"> 
-      <h3>User Status:</h3>
-      <p>Logged in as user: {{ user_dict.user }}</p>
-        <p>Number of known kanji: <a href="/kanjilist">{{ status.known_kanji }}</a></p> 
-        <p>Number of known vocabulary: {{ status.known_vocab }}</p> 
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">User</h4>
+        </div>
+        <div class="panel-body">
+          <p>Logged in as user: {{ user_dict.user }}</p>
+          <p>Number of known kanji: <a href="/kanjilist">{{ status.known_kanji }}</a></p> 
+          <p>Number of known vocabulary: {{ status.known_vocab }}</p> 
+        </div>
+      </div>
     </div>
   </div>
+</div>
 {% endblock %}
